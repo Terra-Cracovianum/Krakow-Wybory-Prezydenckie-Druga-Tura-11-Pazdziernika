@@ -865,6 +865,12 @@ html.has-ticker .status::before { background: var(--live); }
 
 .district-menu::-webkit-scrollbar { display: none; }
 
+@media (min-width: 861px) and (max-width: 1200px) {
+  .district-menu { width: 220px; }
+
+  .district-menu button span { width: 2rem; }
+}
+
 .district-menu button {
   display: flex;
   align-items: center;

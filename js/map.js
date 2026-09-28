@@ -75,7 +75,7 @@ async function init() {
     zoomDelta: 1,
     minZoom: 10,
     maxZoom: 18,
-    maxBounds: cityBounds.pad(0.85),
+    maxBounds: cityBounds.pad(1.4),
     maxBoundsViscosity: 1,
     worldCopyJump: false,
   });
@@ -184,6 +184,8 @@ async function init() {
     if (state.view === "districts") {
       const menu = document.querySelector("#district-menu");
       menu.hidden = !menu.hidden;
+      if (state.district) fitDistrict(state.district, true);
+      else fitCity(true);
       return;
     }
     setMapView("districts");
@@ -636,7 +638,7 @@ function setMapView(view) {
   paintDistricts();
   renderLegend();
   renderDistrictMenu();
-  fitCity();
+  fitCity(true);
 }
 
 function selectDistrict(key) {
@@ -647,7 +649,7 @@ function selectDistrict(key) {
   document.querySelector("#district-menu").hidden = true;
   if (!state.district) {
     if (placeIsOpen()) closeSheet();
-    else fitCity();
+    else fitCity(true);
     return;
   }
   showDistrict(state.district);
@@ -662,10 +664,9 @@ function fitDistrict(key, animate) {
     if (shape.feature.properties.dzielnica === key) target = shape;
   });
   if (!target) return;
-  const menu = document.querySelector("#district-menu");
   const pad = viewPadding();
   map.fitBounds(withSurroundings(target.getBounds(), 0.42), {
-    paddingTopLeft: L.point((menu && !menu.hidden ? 220 : 28) + pad.paddingTopLeft.x, 36),
+    paddingTopLeft: L.point(pad.paddingTopLeft.x + 12, 36),
     paddingBottomRight: pad.paddingBottomRight.add([24, 36]),
     animate: animate !== false,
     maxZoom: 14,
@@ -766,6 +767,15 @@ function withSurroundings(bounds, fraction) {
   );
 }
 
+// On a computer the open district list sits over the map's left edge, so
+// the city is framed to the right of it.
+function menuInset(mapEl) {
+  const menu = document.querySelector("#district-menu");
+  if (!menu || menu.hidden || phoneLayout()) return 0;
+  const box = menu.getBoundingClientRect();
+  return box.width ? Math.max(0, box.right - mapEl.left + 16) : 0;
+}
+
 function viewPadding() {
   const mapEl = document.querySelector("#map").getBoundingClientRect();
   const zoom = document.querySelector(".leaflet-control-zoom");
@@ -773,12 +783,14 @@ function viewPadding() {
   let right = zoomBox && zoomBox.width ? 56 : 16;
   if (zoomBox && zoomBox.width) right = Math.max(right, mapEl.right - zoomBox.left + 10);
   return {
-    paddingTopLeft: L.point(16, 16),
+    paddingTopLeft: L.point(menuInset(mapEl) || 16, 16),
     paddingBottomRight: L.point(right, 16),
   };
 }
 
-function fitCity() {
+// `force` refits even when the city is already in view, e.g. when the
+// district list opens or closes and the free space changes.
+function fitCity(force) {
   const map = state.map;
   if (!map || fitting === "city") return;
   if (map._loaded) {
@@ -799,9 +811,10 @@ function fitCity() {
   if (!Number.isFinite(fitted)) return;
   map.setMinZoom(fitted);
   const zoom = map._loaded ? map.getZoom() : null;
-  if (zoom != null && map.getBounds().contains(frame) && zoom <= fitted + 0.01) return;
+  if (!force && zoom != null && map.getBounds().contains(frame) && zoom <= fitted + 0.01) return;
   fitting = "city";
-  map.fitBounds(frame, { ...pad, animate: false });
+  const glide = Boolean(force) && map._loaded && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  map.fitBounds(frame, { ...pad, animate: glide, duration: 0.45 });
   fitting = false;
 }
 

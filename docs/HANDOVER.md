@@ -147,7 +147,7 @@ The district outlines (`state.borderLayer`, not interactive) sit on top of the p
 
 Hovering on a computer shows `#hover-card`, which follows the pointer (`precinctCard`, `districtCard`). On a touch screen (`hover: none`), the first tap shows the same card with a “Pokaż szczegóły” button. A second tap on the same area opens it (`peekFirst`).
 
-`withSurroundings` expands a bounds by a fraction of its span (minimum span 0.008° latitude and 0.01° longitude). `fitCity` uses fraction `0.16`. `fitDistrict` uses `0.42` and `maxZoom` 14. `fitPrecinct` uses `0.42` and `maxZoom` 15. The city fit also sets `minZoom` so the user cannot zoom the city out of the frame.
+`withSurroundings` expands a bounds by a fraction of its span (minimum span 0.008° latitude and 0.01° longitude). `fitCity` uses fraction `0.16`. `fitDistrict` uses `0.42` and `maxZoom` 14. `fitPrecinct` uses `0.42` and `maxZoom` 15. The city fit also sets `minZoom` so the user cannot zoom the city out of the frame. On a computer, when the district list is open, `viewPadding` adds the list's measured width (`menuInset`), so the city is framed to the right of it. Opening or closing the list calls `fitCity(true)`, which refits even when the city is already in view. `maxBounds` is `cityBounds.pad(1.4)`, so the map can move far enough for that on narrow laptops.
 
 The MapLibre layer’s own resize handler recentres the canvas without resizing it, which shoves the city off the polygons when the left column changes width. `init` replaces that handler with `resizeBasemap`. Leave that override in place.
 
