@@ -102,18 +102,14 @@ async function init() {
       const nr = feature.properties.nr;
       layer.on({
         mouseover(event) {
-          if (!state.highlightNr) {
-            event.target.setStyle(hoverPrecinct(feature));
-            event.target.bringToFront();
-            bringBordersToFront();
-          }
+          if (!state.highlightNr) setHover(event.target, hoverPrecinct(feature), () => precinctLayer.resetStyle(event.target));
           showHoverCard(event, precinctCard(nr), `p${nr}`);
         },
         mousemove(event) {
           moveHoverCard(event);
         },
         mouseout(event) {
-          precinctLayer.resetStyle(event.target);
+          clearHover(event.target);
           bringSelectedToFront();
           hideHoverCard(`p${nr}`);
         },
@@ -129,23 +125,26 @@ async function init() {
   state.borderLayer = L.geoJSON(districts, { style: borderStyle, interactive: false }).addTo(map);
   state.dotLayer = specialDots().addTo(map);
   map.on("click", () => hideHoverCard());
+  // Leaving the map, or starting to drag, clears any outline left behind.
+  map.getContainer().addEventListener("mouseleave", () => {
+    clearHover();
+    hideHoverCard();
+  });
+  map.on("dragstart zoomstart", () => clearHover());
   map.on("zoom zoomend", fadeBasemap);
   const districtLayer = L.geoJSON(districts, {
     style: styleDistrict,
     onEachFeature(feature, layer) {
       layer.on({
         mouseover(event) {
-          if (!state.district) {
-            event.target.setStyle(hoverDistrict(feature));
-            event.target.bringToFront();
-          }
+          if (!state.district) setHover(event.target, hoverDistrict(feature), () => districtLayer.resetStyle(event.target));
           showHoverCard(event, districtCard(feature), `d${feature.properties.dzielnica}`);
         },
         mousemove(event) {
           moveHoverCard(event);
         },
         mouseout(event) {
-          districtLayer.resetStyle(event.target);
+          clearHover(event.target);
           bringSelectedDistrictToFront();
           hideHoverCard(`d${feature.properties.dzielnica}`);
         },
@@ -340,6 +339,25 @@ function hoverDistrict(feature) {
   return { ...styleDistrict(feature), color: palette.selected, weight: 2.2 };
 }
 
+// Only one area is outlined at a time. Browsers sometimes skip "mouseout"
+// when shapes are reordered under the pointer, so each new hover first
+// clears the previous one instead of trusting that event.
+let hovered = null;
+
+function setHover(layer, style, reset) {
+  if (hovered && hovered.layer !== layer) clearHover();
+  hovered = { layer, reset };
+  layer.setStyle(style);
+  layer.bringToFront();
+}
+
+function clearHover(layer) {
+  if (!hovered || (layer && hovered.layer !== layer)) return;
+  const { reset } = hovered;
+  hovered = null;
+  reset();
+}
+
 function bringBordersToFront() {
   if (state.borderLayer && state.map && state.map.hasLayer(state.borderLayer)) state.borderLayer.bringToFront();
 }
@@ -371,14 +389,14 @@ function specialDots() {
     dot.nr = nr;
     dot.on({
       mouseover(event) {
-        event.target.setStyle({ color: palette.selected, weight: 2 });
+        setHover(event.target, { color: palette.selected, weight: 2 }, () => event.target.setStyle(dotStyle(nr)));
         showHoverCard(event, precinctCard(nr), `p${nr}`);
       },
       mousemove(event) {
         moveHoverCard(event);
       },
       mouseout(event) {
-        event.target.setStyle(dotStyle(nr));
+        clearHover(event.target);
         hideHoverCard(`p${nr}`);
       },
       click(event) {
@@ -594,6 +612,7 @@ function districtRank(name) {
 
 function setMapView(view) {
   if (placeIsOpen()) closeSheet();
+  clearHover();
   hideHoverCard();
   state.view = view;
   state.district = null;
