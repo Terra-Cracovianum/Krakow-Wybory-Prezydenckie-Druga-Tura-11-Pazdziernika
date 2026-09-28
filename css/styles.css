@@ -1726,9 +1726,108 @@ html.has-ticker .status::before { background: var(--live); }
   .race-bar { transition: none; }
 }
 
-/* ---------- Phone: map on top, bottom sheet below ---------- */
+/* ---------- Compact layouts: phone upright and phone on its side ----------
+   JS sets html.is-compact for both. The race then moves into the panel
+   (placeRace) and becomes the headline there, so the map keeps its room. */
 
-@media (max-width: 860px) {
+html.is-compact .panel > .race {
+  flex: none;
+  margin: 0 0 14px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+html.is-compact .panel.is-place > .race,
+html.is-compact .panel.is-district > .race { display: none; }
+
+html.is-compact .race-figure span,
+html.is-compact .race-foot { display: none; }
+
+html.is-compact .race-head { gap: 8px; }
+
+html.is-compact .race-name { font-size: 0.78rem; }
+
+html.is-compact .race-figure strong { font-size: 1.45rem; }
+
+html.is-compact .race-middle { margin-bottom: 3px; font-size: 0.72rem; }
+
+html.is-compact .race-track.is-main { height: 10px; margin: 8px 0 0; }
+
+html.is-compact .race-past { margin: 8px 0 0; }
+
+html.is-compact .race-past-labels { margin-top: 4px; }
+
+html.is-compact .race-past-tag,
+html.is-compact .race-past-num { font-size: 0.68rem; }
+
+/* The race already shows both shares, so the duel would only repeat it. */
+html.is-compact #duel { display: none; }
+
+/* One line of header: title on the left, status on the right. */
+html.is-compact .mast {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 12px;
+}
+
+html.is-compact .kicker,
+html.is-compact .mast .status-meter { display: none; }
+
+html.is-compact h1 { margin: 0; font-size: 1.15rem; }
+
+html.is-compact .status { width: auto; margin: 0; font-size: 0.78rem; }
+
+html.is-compact #status-meta { margin-left: 0; }
+
+html.is-compact .sample { flex-basis: 100%; }
+
+html.is-compact .countdown { margin-bottom: 14px; padding: 10px 10px 9px; }
+
+html.is-compact .countdown-tiles { margin: 6px 0 8px; gap: 5px; }
+
+html.is-compact .countdown-tile { padding: 6px 2px 5px; border-radius: 10px; }
+
+html.is-compact .countdown-tile b { font-size: 1.4rem; }
+
+html.is-compact .countdown-tile small { font-size: 0.66rem; }
+
+html.is-compact .totals { padding-top: 12px; margin-bottom: 12px; }
+
+html.is-compact .pkw-chip { display: none; }
+
+/* The legend becomes one slim strip: name, ramp, name. */
+html.is-compact .map-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  padding: 7px 12px;
+  border-radius: 12px;
+}
+
+html.is-compact .legend-heads { display: contents; }
+
+html.is-compact .legend-heads span { order: 1; font-size: 0.72rem; white-space: nowrap; }
+
+html.is-compact .legend-heads span:last-child { order: 3; }
+
+html.is-compact .legend-title { order: 1; font-size: 0.72rem; white-space: nowrap; }
+
+html.is-compact .legend-ramp { order: 2; flex: 1; margin: 0; }
+
+html.is-compact .legend-ramp i { height: 8px; }
+
+html.is-compact .legend-scale,
+html.is-compact .legend-notes { display: none; }
+
+/* ---------- Phone upright: map on top, bottom sheet below ---------- */
+
+@media (max-width: 860px) and (orientation: portrait) {
   .ticker {
     height: calc(34px + env(safe-area-inset-top));
     padding-top: env(safe-area-inset-top);
@@ -1747,31 +1846,6 @@ html.has-ticker .status::before { background: var(--live); }
     gap: 0;
   }
 
-  .race {
-    padding: 10px max(16px, env(safe-area-inset-left)) 28px;
-    border-radius: 0;
-    box-shadow: none;
-    border-top: 1px solid var(--hairline);
-  }
-
-  .race-figure span,
-  .race-foot { display: none; }
-
-  .race-past { margin: 8px 0 0; }
-
-  .race-past-labels { margin-top: 3px; }
-
-  .race-past-tag,
-  .race-past-num { font-size: 0.68rem; }
-
-  .race-figure strong { font-size: 1.15rem; }
-
-  .race-name { font-size: 0.75rem; }
-
-  .race-middle { font-size: 0.72rem; }
-
-  .race-track.is-main { height: 10px; margin: 8px 0 0; }
-
   .stage {
     order: -1;
     flex: 1 1 auto;
@@ -1785,17 +1859,18 @@ html.has-ticker .status::before { background: var(--live); }
   .panel.is-place {
     flex: 0 0 auto;
     width: 100%;
-    height: 50dvh;
-    margin-top: -18px;
-    padding: 0 max(20px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-    border-radius: 18px 18px 0 0;
-    box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.12);
+    height: 52dvh;
+    margin-top: -20px;
+    padding: 0 max(18px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -1px 0 var(--hairline), 0 -8px 28px rgba(0, 0, 0, 0.1);
     transition: height 0.38s cubic-bezier(0.32, 0.72, 0, 1);
   }
 
-  .panel[data-detent="peek"] { height: calc(222px + env(safe-area-inset-bottom)); }
+  /* Peek: handle, one-line header and the race — the result at a glance. */
+  .panel[data-detent="peek"] { height: calc(188px + env(safe-area-inset-bottom)); }
 
-  .panel[data-detent="full"] { height: 88dvh; }
+  .panel[data-detent="full"] { height: calc(100dvh - 64px - env(safe-area-inset-top)); }
 
   .panel.is-dragging { transition: none; }
 
@@ -1820,16 +1895,6 @@ html.has-ticker .status::before { background: var(--live); }
     background: var(--fill-strong);
   }
 
-  .mast { margin-bottom: 12px; }
-
-  .kicker { display: none; }
-
-  h1 { font-size: 1.2rem; }
-
-  .status { margin-top: 4px; }
-
-  .mast .status-meter { display: none; }
-
   .panel.is-place .mast,
   .panel.is-district .mast { display: none; }
 
@@ -1839,44 +1904,41 @@ html.has-ticker .status::before { background: var(--live); }
 
   .duel-pct { font-size: 1.85rem; }
 
-  .countdown { margin-bottom: 14px; padding: 12px 12px 10px; }
-
-  .countdown-tile b { font-size: 1.55rem; }
-
-  .pkw-chip { display: none; }
-
+  /* Top of the map: the view switch across the width, the reset button
+     beside it on the right, both clear of the notch. */
   .map-tools {
     top: max(10px, env(safe-area-inset-top));
     left: 10px;
-    right: 10px;
+    right: 60px;
     max-width: none;
-    align-items: center;
+    align-items: stretch;
   }
 
   .map-switch button {
+    flex: 1;
     min-height: 34px;
-    padding: 6px 14px;
+    padding: 6px 8px;
   }
 
-  .district-menu { align-self: flex-start; }
+  .district-menu { width: 100%; max-height: 40dvh; }
 
   .map-legend {
     left: 10px;
-    bottom: 28px;
-    width: min(236px, calc(100% - 76px));
-    padding: 9px 11px 8px;
+    right: 10px;
+    bottom: 30px;
   }
 
-  .legend-notes { display: none; }
+  .leaflet-bottom.leaflet-right {
+    top: max(10px, env(safe-area-inset-top));
+    bottom: auto;
+  }
 
-  .leaflet-bottom.leaflet-right .leaflet-control { margin-right: 10px; }
+  .leaflet-bottom.leaflet-right .leaflet-control { margin: 0 10px 0 0 !important; }
 
-  .reset-control { margin-bottom: 28px !important; }
-
-  .leaflet-bar a,
-  .leaflet-bar a:hover {
-    width: 44px !important;
-    height: 44px !important;
+  .reset-control a,
+  .reset-control a:hover {
+    width: 40px !important;
+    height: 40px !important;
   }
 
   .leaflet-control-attribution { display: none; }
@@ -1920,8 +1982,6 @@ html.has-ticker .status::before { background: var(--live); }
     border-radius: 14px;
   }
 
-  html.has-ticker .map-legend { display: none; }
-
   .runoff-kicker,
   .runoff-when,
   .runoff-bar { display: none; }
@@ -1935,8 +1995,78 @@ html.has-ticker .status::before { background: var(--live); }
   .runoff-copy span { font-size: 0.72rem; }
 }
 
-@media (max-width: 860px) and (max-height: 520px) {
+/* ---------- Phone on its side: panel left, map right, like the desktop ---------- */
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .app {
+    gap: 8px;
+    padding: 8px max(8px, env(safe-area-inset-right)) 8px max(8px, env(safe-area-inset-left));
+  }
+
   .panel,
-  .panel.is-place,
-  .panel[data-detent="full"] { height: 70dvh; }
+  .panel.is-place {
+    flex-basis: min(320px, 44vw);
+    width: min(320px, 44vw);
+    padding: 12px 14px 6px;
+    border-radius: 16px;
+  }
+
+  .panel.is-place {
+    flex-basis: min(max(320px, calc(160px + var(--place-cols, 1) * 110px)), 52vw);
+    width: min(max(320px, calc(160px + var(--place-cols, 1) * 110px)), 52vw);
+  }
+
+  .panel.is-place .mast,
+  .panel.is-district .mast { display: none; }
+
+  .place-toolbar { margin: 0 0 4px -5px; }
+
+  .popup-place { margin-bottom: 10px; }
+
+  /* The narrow side panel keeps the first-round caption on one line;
+     the grey middle of the bar already shows the other candidates. */
+  .race-past-others { display: none; }
+
+  .race-past-tag { white-space: nowrap; }
+
+  #place-view h3 { font-size: 1.15rem; }
+
+  .stage { border-radius: 16px; }
+
+  .map-tools { top: 8px; left: 8px; }
+
+  .map-switch button { min-height: 30px; padding: 4px 10px; font-size: 0.8rem; }
+
+  .district-menu { max-height: calc(100dvh - 80px); }
+
+  .map-legend {
+    left: 8px;
+    right: 60px;
+    bottom: 8px;
+  }
+
+  .leaflet-bottom.leaflet-right .leaflet-control { margin-right: 8px; }
+
+  .leaflet-bottom .leaflet-control-zoom { margin-bottom: 6px; }
+
+  .reset-control { margin-bottom: 8px !important; }
+
+  .leaflet-bar a,
+  .leaflet-bar a:hover {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .leaflet-control-attribution { display: none; }
+
+  .result-table th,
+  .result-table td { padding: 6px 8px; font-size: 0.88rem; }
+
+  .result-table .nums {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+  }
+
+  .result-table .nums em { min-width: 0; font-size: 0.72rem; }
 }

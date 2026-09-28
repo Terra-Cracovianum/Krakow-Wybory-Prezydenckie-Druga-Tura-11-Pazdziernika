@@ -64,6 +64,7 @@ async function init() {
   state.districts = districts;
 
   readPalette();
+  placeRace();
   renderSummary();
   renderCandidates();
 
@@ -79,6 +80,10 @@ async function init() {
     maxBoundsViscosity: 1,
     worldCopyJump: false,
   });
+  // Leaflet treats 3px of movement during a click as a drag and drops the
+  // click. A trackpad tap easily moves that much, so allow a little more
+  // before a press counts as dragging the map (Leaflet 1.9.4, pinned).
+  if (map.dragging && map.dragging._draggable) map.dragging._draggable.options.clickTolerance = 8;
   new ResetControl({ position: "bottomright" }).addTo(map);
   L.control.zoom({ position: "bottomright", zoomInTitle: "Przybliż", zoomOutTitle: "Oddal" }).addTo(map);
   const basemap = L.maplibreGL({
@@ -176,6 +181,7 @@ async function init() {
     else openPrecinct(key.slice(1));
   });
   bindSheet();
+  watchLayout();
   const scheme = window.matchMedia("(prefers-color-scheme: dark)");
   const repaint = () => {
     readPalette();
@@ -367,13 +373,22 @@ function markSelected(shape, selected) {
 let hovered = null;
 
 function setHover(layer, style, reset) {
-  if (hovered && hovered.layer !== layer) clearHover();
+  // Moving a shape in the page under the pointer makes browsers drop the
+  // click that is under way, so a shape already hovered is left alone.
+  if (hovered && hovered.layer === layer) return;
+  if (hovered) clearHover();
   hovered = { layer, reset };
   layer.setStyle(style);
-  layer.bringToFront();
+  toFront(layer);
   // The selected area always stays above a preview.
   bringSelectedToFront();
   bringSelectedDistrictToFront();
+}
+
+// Re-append a shape only when it is not already the top one.
+function toFront(layer) {
+  const path = layer._path;
+  if (path && path.parentNode && path.parentNode.lastChild !== path) layer.bringToFront();
 }
 
 function clearHover(layer) {
@@ -593,14 +608,14 @@ function bringSelectedToFront() {
   const nr = state.highlightNr;
   if (!nr || !state.precinctLayer) return;
   state.precinctLayer.eachLayer((shape) => {
-    if (String(shape.feature.properties.nr) === String(nr)) shape.bringToFront();
+    if (String(shape.feature.properties.nr) === String(nr)) toFront(shape);
   });
 }
 
 function bringSelectedDistrictToFront() {
   if (!state.district || !state.districtLayer) return;
   state.districtLayer.eachLayer((shape) => {
-    if (shape.feature.properties.dzielnica === state.district) shape.bringToFront();
+    if (shape.feature.properties.dzielnica === state.district) toFront(shape);
   });
 }
 
@@ -816,8 +831,10 @@ function viewPadding() {
   let right = zoomBox && zoomBox.width ? 56 : 16;
   if (zoomBox && zoomBox.width) right = Math.max(right, mapEl.right - zoomBox.left + 10);
   return {
-    paddingTopLeft: L.point(menuInset(mapEl) || 16, 16),
-    paddingBottomRight: L.point(right, 16),
+    // On a compact screen the view switch sits on top of the map and the
+    // legend strip at the bottom, so the city is framed between them.
+    paddingTopLeft: L.point(menuInset(mapEl) || 16, compactLayout() ? 54 : 16),
+    paddingBottomRight: L.point(right, compactLayout() ? (phoneLayout() ? 72 : 48) : 16),
   };
 }
 
@@ -1014,8 +1031,46 @@ function openStation(index, nr) {
   query.blur();
 }
 
+// A phone held upright gets the bottom sheet. A phone on its side keeps the
+// desktop layout, only tighter. Both are "compact": the race moves into the
+// panel as its headline, so the map keeps all its height.
+const PHONE_QUERY = "(max-width: 860px) and (orientation: portrait)";
+const COMPACT_QUERY = `${PHONE_QUERY}, (orientation: landscape) and (max-height: 560px)`;
+
 function phoneLayout() {
-  return window.matchMedia("(max-width: 860px)").matches;
+  return window.matchMedia(PHONE_QUERY).matches;
+}
+
+function compactLayout() {
+  return window.matchMedia(COMPACT_QUERY).matches;
+}
+
+function placeRace() {
+  const race = document.querySelector("#race");
+  const panel = document.querySelector(".panel");
+  const main = document.querySelector(".main");
+  if (!race || !panel || !main) return;
+  const compact = compactLayout();
+  document.documentElement.classList.toggle("is-compact", compact);
+  if (compact && race.parentElement !== panel) panel.insertBefore(race, document.querySelector("#city-view"));
+  if (!compact && race.parentElement !== main) main.appendChild(race);
+}
+
+function watchLayout() {
+  const relayout = () => {
+    placeRace();
+    if (!state.map) return;
+    state.map.invalidateSize({ animate: false, pan: false });
+    if (placeIsOpen() && state.focusFeature) fitPrecinct(false);
+    else if (state.view === "districts" && state.district) fitDistrict(state.district, false);
+    else fitCity(true);
+    syncBasemap();
+    paintDots();
+  };
+  for (const query of [PHONE_QUERY, COMPACT_QUERY]) {
+    const list = window.matchMedia(query);
+    if (list.addEventListener) list.addEventListener("change", relayout);
+  }
 }
 
 function setDetent(detent) {
@@ -1531,7 +1586,7 @@ function renderRace() {
         </div>
         <p class="race-past-labels" aria-hidden="true">
           <span><b class="race-past-num" style="--c:${first.color}" data-count="${pastA}" data-kind="share">0,00%</b></span>
-          <span class="race-past-tag">I tura, 27 września · pozostali kandydaci ${formatPercent(others)}</span>
+          <span class="race-past-tag">I tura, 27 września<span class="race-past-others"> · pozostali kandydaci ${formatPercent(others)}</span></span>
           <span><b class="race-past-num" style="--c:${second.color}" data-count="${pastB}" data-kind="share">0,00%</b></span>
         </p>
       </div>`
