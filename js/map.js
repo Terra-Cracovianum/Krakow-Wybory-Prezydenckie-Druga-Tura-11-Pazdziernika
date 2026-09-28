@@ -1494,9 +1494,10 @@ function renderRace() {
   const complete = counted && reported >= total;
   const winner = complete && a !== b ? (a > b ? first : second) : null;
   const side = (candidate, votes, align) => {
+    // The numbers count up together with the bar (see animateRace).
     const figure = counted
-      ? `<strong>${percentLabel(votes, valid)}</strong><span>${formatCount(votes)} ${voteNoun(votes)}</span>`
-      : `<strong>—</strong><span>${candidate.firstRound ? `I tura: ${formatPercent(candidate.firstRound.share)}` : ""}</span>`;
+      ? `<strong data-count="${(100 * votes) / valid}" data-kind="share">0,00%</strong><span data-count="${votes}" data-kind="votes">0 głosów</span>`
+      : `<strong>—</strong><span>czekamy na wyniki</span>`;
     const won = winner && winner.id === candidate.id ? " is-winner" : "";
     return `<div class="race-side ${align}${won}" style="--c:${candidate.color}">
         <span class="race-name">${escapeHtml(displayName(candidate))}</span>
@@ -1514,20 +1515,83 @@ function renderRace() {
     : counted
       ? `Policzono ${numberFormat.format(reported)} z ${numberFormat.format(total)} ${obwodNoun(total)} · szary środek to ${numberFormat.format(remaining)} jeszcze niepoliczonych`
       : `Czekamy na pierwsze wyniki PKW · 0 z ${numberFormat.format(total)} ${obwodNoun(total)}`;
-  const over = (width) => (width > 50 ? " is-over" : "");
+
+  // First round, 27 September, as a thinner reference bar. The grey middle
+  // is everyone else on that ballot.
+  const pastA = first.firstRound ? first.firstRound.share : 0;
+  const pastB = second.firstRound ? second.firstRound.share : 0;
+  const others = Math.max(0, 100 - pastA - pastB);
+  const past = pastA || pastB
+    ? `<div class="race-past" aria-label="I tura, 27 września: ${escapeHtml(first.short)} ${formatPercent(pastA)}, ${escapeHtml(second.short)} ${formatPercent(pastB)}, pozostali ${formatPercent(others)}">
+        <div class="race-track is-past" aria-hidden="true">
+          <span class="race-bar is-left" data-width="${pastA}" style="--c:${first.color}"></span>
+          <span class="race-bar is-right" data-width="${pastB}" style="--c:${second.color}"></span>
+          <i class="race-line"></i>
+        </div>
+        <p class="race-past-labels" aria-hidden="true">
+          <span><b class="race-past-num" style="--c:${first.color}" data-count="${pastA}" data-kind="share">0,00%</b></span>
+          <span class="race-past-tag">I tura, 27 września · pozostali kandydaci ${formatPercent(others)}</span>
+          <span><b class="race-past-num" style="--c:${second.color}" data-count="${pastB}" data-kind="share">0,00%</b></span>
+        </p>
+      </div>`
+    : "";
+
   box.classList.toggle("is-complete", complete);
+  box.classList.remove("is-crossed");
+  if (winner) box.style.setProperty("--win", winner.color);
   box.innerHTML = `<div class="race-head">${side(first, a, "is-left")}<p class="race-middle">${middle}</p>${side(second, b, "is-right")}</div>
-    <div class="race-track" aria-hidden="true">
-      <span class="race-bar is-left${over(widthA)}" data-width="${widthA}" style="--c:${first.color}"></span>
-      <span class="race-bar is-right${over(widthB)}" data-width="${widthB}" style="--c:${second.color}"></span>
+    <div class="race-track is-main" aria-hidden="true">
+      <span class="race-bar is-left" data-width="${widthA}" style="--c:${first.color}"></span>
+      <span class="race-bar is-right" data-width="${widthB}" style="--c:${second.color}"></span>
       <i class="race-line"></i>
     </div>
+    ${past}
     <p class="race-foot">${foot}</p>`;
-  // Start from the edges, then grow, so the race visibly moves on load.
-  const bars = box.querySelectorAll(".race-bar");
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    bars.forEach((bar) => { bar.style.width = `${bar.dataset.width}%`; });
-  }));
+  animateRace(box, Boolean(winner));
+}
+
+// Fill in from both edges toward the middle, counting the numbers up with
+// the bars. The main race goes first; the first-round bar follows.
+function animateRace(box, crowned) {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const groups = [
+    { root: box.querySelector(".race-track.is-main"), extra: box.querySelectorAll(".race-head [data-count]"), delay: 150, duration: 1700 },
+    { root: box.querySelector(".race-past"), extra: [], delay: 650, duration: 1300 },
+  ].filter((group) => group.root);
+  const ease = (t) => 1 - Math.pow(1 - t, 4);
+  const paint = (group, amount) => {
+    group.root.querySelectorAll(".race-bar").forEach((bar) => {
+      bar.style.width = `${Number(bar.dataset.width) * amount}%`;
+    });
+    [...group.root.querySelectorAll("[data-count]"), ...group.extra].forEach((node) => {
+      const target = Number(node.dataset.count);
+      const value = target * amount;
+      if (node.dataset.kind === "share") node.textContent = formatPercent(value);
+      else {
+        const whole = Math.round(value);
+        node.textContent = `${formatCount(whole)} ${voteNoun(whole)}`;
+      }
+    });
+  };
+  const crown = () => { if (crowned) box.classList.add("is-crossed"); };
+  if (reduce) {
+    groups.forEach((group) => paint(group, 1));
+    crown();
+    return;
+  }
+  groups.forEach((group) => paint(group, 0));
+  const start = performance.now();
+  const step = (now) => {
+    let running = false;
+    for (const group of groups) {
+      const t = Math.min(1, Math.max(0, (now - start - group.delay) / group.duration));
+      paint(group, ease(t));
+      if (t < 1) running = true;
+    }
+    if (running) requestAnimationFrame(step);
+    else crown();
+  };
+  requestAnimationFrame(step);
 }
 
 function displayName(candidate) {
