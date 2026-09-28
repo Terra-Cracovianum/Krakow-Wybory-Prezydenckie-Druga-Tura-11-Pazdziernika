@@ -34,4 +34,4 @@ Nie dopisujemy wyników z sondaży ani ze zrzutów nieoficjalnych. Kolory przy n
 
 Settings → Pages → Deploy from a branch → `main` → `/ (root)`. Strona nie wymaga budowania. Adres: `https://terra-cracovianum.github.io/Krakow-Wybory-Prezydenckie-Druga-Tura-11-Pazdziernika/`.
 
-Podgląd linku na X, Facebooku i w komunikatorach bierze się z `druga-tura.jpg` (1200×630, baseline JPEG) oraz znaczników w `index.html`. Adres obrazu jest stały, bez parametru w URL. Żeby zmienić obraz, wgraj plik pod nową nazwą i popraw znaczniki.
+Podgląd linku na X, Facebooku i w komunikatorach bierze się z `druga-tura-2.jpg` (1200×630, baseline JPEG) oraz znaczników w `index.html`. Adres obrazu jest stały, bez parametru w URL. Żeby zmienić obraz, wgraj plik pod nową nazwą i popraw znaczniki.

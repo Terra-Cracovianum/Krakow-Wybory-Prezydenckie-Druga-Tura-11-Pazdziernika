@@ -1202,6 +1202,7 @@ function renderSummary() {
   renderProgress();
   renderPkwChip();
   renderRunoff();
+  renderRace();
 }
 
 function renderPkwChip() {
@@ -1437,10 +1438,71 @@ function duelMarkup(votesById, validVotes, city) {
       ? `<p class="duel-lead"><b style="color:${lead.color}">${escapeHtml(lead.short)} +${formatPoints((100 * Math.abs(a - b)) / validVotes)}</b> przewagi</p>`
       : `<p class="duel-lead"><b>Remis</b></p>`;
   }
-  return `<div class="duel-grid">${side(first, a, "is-left")}${side(second, b, "is-right")}</div>
-    <div class="split is-large${counted ? "" : " is-empty"}" aria-hidden="true">
+  // The city duel leaves the bar to the race under the map.
+  const bar = city
+    ? ""
+    : `<div class="split is-large${counted ? "" : " is-empty"}" aria-hidden="true">
       <span style="width:${width}%;background:${first.color}"></span><span style="background:${second.color}"></span><i></i>
-    </div>${note}`;
+    </div>`;
+  return `<div class="duel-grid">${side(first, a, "is-left")}${side(second, b, "is-right")}</div>${bar}${note}`;
+}
+
+// The race to 50%, under the map. Each candidate grows from their own end:
+// share of counted valid votes × share of commissions counted. The grey
+// middle is what is still uncounted, so the bars close in on the 50% line
+// as the count goes on. Only the full count names a winner.
+function renderRace() {
+  const box = document.querySelector("#race");
+  if (!box) return;
+  const results = state.results;
+  const [first, second] = state.candidates;
+  const total = results.precinctsTotal || 0;
+  const reported = results.sample ? 0 : Math.min(results.precinctsReporting || 0, total);
+  const progress = total > 0 ? reported / total : 0;
+  const valid = results.validVotes;
+  const votesOf = (candidate) => (typeof results.candidates[candidate.id] === "number" ? results.candidates[candidate.id] : null);
+  const a = votesOf(first);
+  const b = votesOf(second);
+  const counted = reported > 0 && a !== null && b !== null && typeof valid === "number" && valid > 0;
+  const widthA = counted ? (a / valid) * progress * 100 : 0;
+  const widthB = counted ? (b / valid) * progress * 100 : 0;
+  const complete = counted && reported >= total;
+  const winner = complete && a !== b ? (a > b ? first : second) : null;
+  const side = (candidate, votes, align) => {
+    const figure = counted
+      ? `<strong>${percentLabel(votes, valid)}</strong><span>${formatCount(votes)} ${voteNoun(votes)}</span>`
+      : `<strong>—</strong><span>${candidate.firstRound ? `I tura: ${formatPercent(candidate.firstRound.share)}` : ""}</span>`;
+    const won = winner && winner.id === candidate.id ? " is-winner" : "";
+    return `<div class="race-side ${align}${won}" style="--c:${candidate.color}">
+        <span class="race-name">${escapeHtml(displayName(candidate))}</span>
+        <span class="race-figure">${figure}</span>
+      </div>`;
+  };
+  let middle;
+  if (winner) middle = `<b style="color:${winner.color}">Wygrywa ${escapeHtml(winner.short)}</b>`;
+  else if (complete) middle = "<b>Remis</b>";
+  else if (counted) middle = "<b>50%</b> wygrywa";
+  else middle = "Kto pierwszy przekroczy <b>50%</b>?";
+  const remaining = total - reported;
+  const foot = complete
+    ? `Policzono wszystkie ${numberFormat.format(total)} komisje`
+    : counted
+      ? `Policzono ${numberFormat.format(reported)} z ${numberFormat.format(total)} ${obwodNoun(total)} · szary środek to ${numberFormat.format(remaining)} jeszcze niepoliczonych`
+      : `Czekamy na pierwsze wyniki PKW · 0 z ${numberFormat.format(total)} ${obwodNoun(total)}`;
+  const over = (width) => (width > 50 ? " is-over" : "");
+  box.classList.toggle("is-complete", complete);
+  box.innerHTML = `<div class="race-head">${side(first, a, "is-left")}<p class="race-middle">${middle}</p>${side(second, b, "is-right")}</div>
+    <div class="race-track" aria-hidden="true">
+      <span class="race-bar is-left${over(widthA)}" data-width="${widthA}" style="--c:${first.color}"></span>
+      <span class="race-bar is-right${over(widthB)}" data-width="${widthB}" style="--c:${second.color}"></span>
+      <i class="race-line"></i>
+    </div>
+    <p class="race-foot">${foot}</p>`;
+  // Start from the edges, then grow, so the race visibly moves on load.
+  const bars = box.querySelectorAll(".race-bar");
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bars.forEach((bar) => { bar.style.width = `${bar.dataset.width}%`; });
+  }));
 }
 
 function displayName(candidate) {
