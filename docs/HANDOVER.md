@@ -108,7 +108,7 @@ Turnout on the city card is `validCards / eligible`, not `ballots / eligible`, a
 
 On a finished count the winner is whoever has more votes in `results.candidates` (`renderRunoff`). With two candidates that is also more than half of the valid votes. If both have the same number, nobody is named.
 
-The `withdrawn` checks in `outcomeForNumbers`, `leaderOf`, `candidateList`, `voteCell` and `renderRunoff` are left over from the first round, when Hoffman withdrew. No second-round candidate has the flag, so they do nothing. They were kept to keep the diff small.
+The `withdrawn` checks in `leaderOf`, `voteCell`, `stationPopup` and `renderRunoff` are left over from the first round, when Hoffman withdrew. No second-round candidate has the flag, so they do nothing. They were kept to keep the diff small.
 
 Polish plurals are `voteNoun` and `obwodNoun`. Only exactly one uses the singular (`1 głos`, `1 obwód`). Numbers ending in 2, 3 or 4 use the small plural, except 12–14 (`2 głosy`, `22 obwody`, `12 głosów`). Everything else uses the large plural (`5 głosów`, `21 głosów`, `25 obwodów`). The first-round code wrongly wrote `21 głos`; that is fixed here.
 
