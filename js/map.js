@@ -1228,6 +1228,7 @@ function renderSummary() {
   renderPkwChip();
   renderRunoff();
   renderRace();
+  startCountdown();
 }
 
 function renderPkwChip() {
@@ -1597,6 +1598,81 @@ function animateRace(box, crowned) {
 function displayName(candidate) {
   const words = candidate.name.split(" ");
   return words.length > 2 ? `${words[0]} ${words[words.length - 1]}` : candidate.name;
+}
+
+// Election day, Polish time (CEST, UTC+2). Silence starts at midnight
+// between Friday and Saturday and lasts until the polls close.
+const SILENCE_AT = Date.parse("2026-10-10T00:00:00+02:00");
+const POLLS_OPEN_AT = Date.parse("2026-10-11T07:00:00+02:00");
+const POLLS_CLOSE_AT = Date.parse("2026-10-11T21:00:00+02:00");
+let countdownTimer = 0;
+
+function startCountdown() {
+  const box = document.querySelector("#countdown");
+  if (!box) return;
+  const results = state.results;
+  const waiting = !results.sample && !(results.precinctsReporting > 0);
+  window.clearInterval(countdownTimer);
+  box.hidden = !waiting;
+  if (!waiting) return;
+  renderCountdown(box);
+  countdownTimer = window.setInterval(() => renderCountdown(box), 1000);
+}
+
+function renderCountdown(box) {
+  const now = Date.now();
+  if (now >= POLLS_CLOSE_AT) {
+    window.clearInterval(countdownTimer);
+    box.innerHTML = `<p class="countdown-title">Lokale zamknięte</p><p class="countdown-note">Czekamy na pierwsze wyniki PKW.</p>`;
+    box.setAttribute("aria-label", "Lokale zamknięte. Czekamy na pierwsze wyniki PKW.");
+    return;
+  }
+  const voting = now >= POLLS_OPEN_AT;
+  const target = voting ? POLLS_CLOSE_AT : POLLS_OPEN_AT;
+  const left = splitTime(target - now);
+  const tiles = [
+    ...(voting ? [] : [[left.days, dayNoun(left.days)]]),
+    [left.hours, "godz."],
+    [left.minutes, "min"],
+    [left.seconds, "sek"],
+  ]
+    .map(([value, unit], index) => `<span class="countdown-tile"><b>${voting || index > 0 ? pad2(value) : value}</b><small>${unit}</small></span>`)
+    .join("");
+  let note;
+  if (voting) {
+    note = `<p class="countdown-note"><span>Głosujesz w swoim obwodzie · znajdź lokal poniżej</span></p>`;
+  } else if (now >= SILENCE_AT) {
+    note = `<p class="countdown-note is-silence"><i></i><span>Trwa cisza wyborcza · do zamknięcia lokali w niedzielę o 21:00</span></p>`;
+  } else {
+    const silence = splitTime(SILENCE_AT - now);
+    const days = silence.days > 0 ? `${silence.days} ${dayNoun(silence.days)} ` : "";
+    note = `<p class="countdown-note is-silence-soon"><i></i><span>Cisza wyborcza za <b>${days}${pad2(silence.hours)}:${pad2(silence.minutes)}:${pad2(silence.seconds)}</b> · od północy z piątku na sobotę</span></p>`;
+  }
+  const title = voting ? "Lokale otwarte · do zamknięcia zostało" : "Otwarcie lokali za";
+  box.innerHTML = `<p class="countdown-title">${title}</p>
+    <div class="countdown-tiles${voting ? " is-three" : ""}" aria-hidden="true">${tiles}</div>${note}`;
+  const spoken = voting
+    ? `Lokale otwarte do 21:00.`
+    : `Lokale otwierają się w niedzielę 11 października o 7:00, za ${left.days} ${dayNoun(left.days)} i ${left.hours} godz.`;
+  box.setAttribute("aria-label", spoken);
+}
+
+function splitTime(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  return {
+    days: Math.floor(total / 86400),
+    hours: Math.floor((total % 86400) / 3600),
+    minutes: Math.floor((total % 3600) / 60),
+    seconds: total % 60,
+  };
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function dayNoun(days) {
+  return days === 1 ? "dzień" : "dni";
 }
 
 function formatPoints(value) {

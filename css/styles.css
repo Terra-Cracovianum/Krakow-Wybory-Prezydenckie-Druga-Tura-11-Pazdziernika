@@ -17,6 +17,7 @@
   --map-neutral: #ebe8e3; /* hex */
   --map-empty: #e8e8ed;
   --map-line: #ffffff;
+  --silence: #ff9f0a;
   --map-dot-empty: #c7c7cc;
   --map-gap: 2.4; /* px between districts */
   --map-hair: 0.8; /* px between precincts */
@@ -43,6 +44,7 @@
     --map-neutral: #5b5b60;
     --map-empty: #2c2c2e;
     --map-line: #1c1c1e;
+    --silence: #ffb340;
     --map-dot-empty: #636366;
     --map-gap: 1.6;
     --map-hair: 0.5;
@@ -318,6 +320,94 @@ html.has-ticker .status::before { background: var(--live); }
 
 #city-view[hidden],
 #place-view[hidden] { display: none; }
+
+/* ---------- Countdown to election day ---------- */
+
+.countdown {
+  margin: 0 0 18px;
+  padding: 14px 14px 12px;
+  border-radius: 16px;
+  background: var(--fill);
+}
+
+.countdown[hidden] { display: none; }
+
+.countdown p { margin: 0; }
+
+.countdown-title {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.countdown-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+
+.countdown-tiles.is-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.countdown-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px 6px;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.countdown-tile b {
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-tile small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.countdown-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.countdown-note b {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-note i {
+  align-self: flex-start;
+  margin-top: 0.3em;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--silence);
+}
+
+.countdown-note.is-silence { color: var(--ink); font-weight: 500; }
+
+.countdown-note.is-silence i { animation: silence-pulse 2s ease-out infinite; }
+
+@keyframes silence-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--silence) 55%, transparent); }
+  70% { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
 
 /* ---------- Head to head ---------- */
 
@@ -1622,6 +1712,7 @@ html.has-ticker .status::before { background: var(--live); }
   .pkw-chip .pkw-mark,
   .pkw-chip .pkw-track span { animation: none; transition: none; }
   .confetti-piece { display: none; }
+  .countdown-note.is-silence i { animation: none; }
   .panel,
   .split span,
   .progress-track span,
@@ -1744,6 +1835,10 @@ html.has-ticker .status::before { background: var(--live); }
   .duel { margin-bottom: 16px; }
 
   .duel-pct { font-size: 1.85rem; }
+
+  .countdown { margin-bottom: 14px; padding: 12px 12px 10px; }
+
+  .countdown-tile b { font-size: 1.55rem; }
 
   .pkw-chip { display: none; }
 

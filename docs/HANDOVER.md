@@ -161,6 +161,8 @@ Under the map sits the race to 50% (`renderRace`, `#race`). Each candidate's bar
 
 Colours: Gibała is blue (`#1f6fe0`) and Piątkowska is red (`#e5343f`), both in `candidates.json`. The turnout view is teal (`--turnout`), so it cannot be mistaken for either candidate.
 
+Before the first result, the top of the panel shows a countdown (`#countdown`, `startCountdown` and `renderCountdown`, ticking every second). The times are fixed in `js/map.js` in Polish time: `SILENCE_AT` 2026-10-10 00:00 (the start of the election silence, midnight between Friday and Saturday), `POLLS_OPEN_AT` 2026-10-11 07:00 and `POLLS_CLOSE_AT` 21:00. It counts down to the polls opening, with a line counting down to the silence. During the silence that line says it is on until 21:00 on Sunday. While the polls are open it counts down to closing, and after 21:00 it says the polls are closed. It disappears once `precinctsReporting` is above 0. Change the three dates for another election.
+
 The city view and the district sheet share `duelMarkup`: two percentages facing each other, one split bar with a tick at 50% (district sheet only; the city uses the race under the map), and the lead in points (“Gibała +4,92 pkt przewagi”). Before any result, the city view shows the first-round share from `firstRound` in `candidates.json`.
 
 The district sheet shows the roman number and the official name, a sentence with the precinct count, turnout, counted precincts, valid votes, and the duel. It does not list the precinct numbers: a reader who wants a single precinct switches to Obwody.
