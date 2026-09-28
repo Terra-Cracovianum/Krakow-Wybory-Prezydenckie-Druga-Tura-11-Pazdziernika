@@ -164,7 +164,7 @@ The phone layout starts at `max-width: 860px`. The map is on top and the column 
 
 ## Finished count, confetti, visits
 
-`renderRunoff` runs only when `sample` is absent and `precinctsReporting >= precinctsTotal`. It writes `#runoff` and calls `renderTicker`. The ticker copies its sentence into `#ticker-live` once, for the screen reader, and duplicates the visible track until it is at least twice the viewport. `prefers-reduced-motion` leaves a single static line. The sentence is “Druga tura, 11 października 2026. Prezydentem Krakowa zostaje {name}, {n} głosów ({%}). {second name}, {n} głosów.” (`tickerLine`). It uses “Prezydentką” when the winner has `feminine: true`.
+`renderRunoff` runs only when `sample` is absent and `precinctsReporting >= precinctsTotal`. It writes `#runoff` and calls `renderTicker`. The ticker copies its sentence into `#ticker-live` once, for the screen reader, and duplicates the visible track until it is at least twice the viewport. `prefers-reduced-motion` leaves a single static line. The sentence is “Druga tura, 11 października 2026. Prezydentem Krakowa zostaje {name}, {n} głosów ({percent}). {second name}, {n} głosów.” (`tickerLine`). It uses “Prezydentką” when the winner has `feminine: true`.
 
 `celebrateCount` reads `sessionStorage` key `krakow-wybory-2-tura-confetti`. Reduced motion skips it. It does not run again in the same tab.
 
