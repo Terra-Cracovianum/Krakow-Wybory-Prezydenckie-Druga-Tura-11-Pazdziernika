@@ -30,6 +30,17 @@ Frekwencja to `validCards / eligible` (gdy brakuje `validCards`, strona bierze `
 
 Nie dopisujemy wyników z sondaży ani ze zrzutów nieoficjalnych. Kolory przy nazwiskach służą tylko do czytania mapy.
 
+## Wieczór wyborczy
+
+Wyniki na stronę wrzuca skrypt `scripts/pkw-watch.mjs`. Co 30 sekund sprawdza PKW i, gdy przybyło policzonych komisji, publikuje nowy `data/results.json`. Zatrzymuje się przy 100%. Strona sama pobiera nowe wyniki co 30 sekund.
+
+- **GitHub Actions:** zakładka Actions → „Wyniki PKW na żywo” → Run workflow, wklej adres PKW. Albo wcześniej ustaw zmienną `PKW_URL` (Settings → Secrets and variables → Actions → Variables), a workflow ruszy sam o 20:50 w niedzielę.
+- **Zapasowo, na komputerze:** `node scripts/pkw-watch.mjs --url "<adres PKW>" --push` w katalogu repozytorium.
+
+Przed pierwszym uruchomieniem trzeba dopasować `readCommissions` w `scripts/pkw-adapter.mjs` do pliku PKW z dnia wyborów.
+
+Odwiedziny: `node scripts/visits.mjs` pokazuje wejścia i osoby do 11.10 21:00 i po tej godzinie.
+
 ## GitHub Pages
 
 Settings → Pages → Deploy from a branch → `main` → `/ (root)`. Strona nie wymaga budowania. Adres: `https://terra-cracovianum.github.io/Krakow-Wybory-Prezydenckie-Druga-Tura-11-Pazdziernika/`.

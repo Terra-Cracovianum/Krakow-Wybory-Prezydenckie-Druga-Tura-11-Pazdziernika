@@ -1,0 +1,59 @@
+name: Wyniki PKW na żywo
+
+# Checks PKW every 30 seconds and republishes data/results.json whenever more
+# commissions are counted, until PKW has counted all of them.
+#
+# Start it by hand: Actions → "Wyniki PKW na żywo" → Run workflow, paste the
+# PKW address. Or set the repository variable PKW_URL (Settings → Secrets and
+# variables → Actions → Variables) and it starts itself at 20:50 on Sunday
+# 11 October (18:50 UTC). Commits are made as Adam, like every other commit.
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Adres danych PKW"
+        required: true
+      interval:
+        description: "Co ile sekund sprawdzać"
+        default: "30"
+  schedule:
+    - cron: "50 18 11 10 *"
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: pkw-live
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Commit as Adam
+        run: |
+          git config user.name "Adam"
+          git config user.email "97188913+MarkockiAdam@users.noreply.github.com"
+
+      - name: Watch PKW
+        env:
+          PKW_URL: ${{ inputs.url || vars.PKW_URL }}
+          PKW_INTERVAL: ${{ inputs.interval || '30' }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "$PKW_URL" ]; then
+            echo "Brak adresu PKW (pole url albo zmienna PKW_URL). Kończę."
+            exit 0
+          fi
+          node scripts/pkw-watch.mjs --push --max-hours 5.7
