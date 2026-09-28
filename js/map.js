@@ -1778,9 +1778,6 @@ function stationPopup(feature, highlightNr) {
         <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M10 3.2L5.2 8 10 12.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Miasto
       </button>
-      <button type="button" class="sheet-close" data-close aria-label="Zamknij">
-        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.2 3.2l9.6 9.6M12.8 3.2L3.2 12.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-      </button>
     </div>
     <header class="popup-place">
       <p class="popup-kicker">Lokal wyborczy</p>
@@ -1812,9 +1809,6 @@ function districtSheet(feature) {
       <button type="button" class="place-back" data-close>
         <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M10 3.2L5.2 8 10 12.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Miasto
-      </button>
-      <button type="button" class="sheet-close" data-close aria-label="Zamknij">
-        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.2 3.2l9.6 9.6M12.8 3.2L3.2 12.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
     </div>
     <header class="popup-place">

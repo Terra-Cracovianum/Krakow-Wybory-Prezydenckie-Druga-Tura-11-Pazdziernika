@@ -694,25 +694,6 @@ html.has-ticker .status::before { background: var(--live); }
 
 .place-back:hover { background: var(--fill); }
 
-.sheet-close {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 32px;
-  height: 32px;
-  margin: 6px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: var(--fill);
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.sheet-close:hover { background: var(--fill-strong); }
-
-.sheet-close svg { width: 12px; height: 12px; }
-
 .popup-place {
   display: flex;
   flex-direction: column;
