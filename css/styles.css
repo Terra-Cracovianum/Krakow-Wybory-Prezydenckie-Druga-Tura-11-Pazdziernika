@@ -671,7 +671,10 @@ html.has-ticker .status::before { background: var(--live); }
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin: -10px -10px 10px -10px;
+  /* Stay inside the scroll area (5px of room each side), or the panel
+     clips the round close button. The back chevron still lines up with
+     the text below. */
+  margin: 0 0 10px -5px;
 }
 
 .place-back {
@@ -1830,7 +1833,7 @@ html.has-ticker .status::before { background: var(--live); }
   .panel.is-place .mast,
   .panel.is-district .mast { display: none; }
 
-  .place-toolbar { margin: -4px -10px 6px; }
+  .place-toolbar { margin: 0 0 6px -5px; }
 
   .duel { margin-bottom: 16px; }
 
