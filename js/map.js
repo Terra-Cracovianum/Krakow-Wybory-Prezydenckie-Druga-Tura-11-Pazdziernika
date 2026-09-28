@@ -239,7 +239,9 @@ function readPalette() {
   palette.neutral = read("--map-neutral", "#ebe8e3");
   palette.empty = read("--map-empty", "#e3e3e8");
   palette.line = read("--map-line", "#ffffff");
-  palette.border = read("--map-border", "rgba(29, 29, 31, 0.42)");
+  palette.dotEmpty = read("--map-dot-empty", "#c7c7cc");
+  palette.gap = parseFloat(read("--map-gap", "2.4")) || 2.4;
+  palette.hair = parseFloat(read("--map-hair", "0.8")) || 0.8;
   palette.selected = read("--ink", "#1d1d1f");
   palette.turnout = read("--turnout", "#2f5f8f");
 }
@@ -317,15 +319,18 @@ function styleDistrict(feature) {
   return areaStyle(fillFor(feature.properties.nrs), selected, Boolean(state.district && !selected), "district");
 }
 
+// Districts are separated by a wider gap in the page colour, not a dark
+// line. The dissolved outlines never match precinct edges to the pixel;
+// a gap hides that, and the city edge simply fades into the page.
 function borderStyle() {
-  return { color: palette.border, weight: 1.1, opacity: 1, fill: false, interactive: false, ...pathEdge };
+  return { color: palette.line, weight: palette.gap, opacity: 1, fill: false, interactive: false, ...pathEdge };
 }
 
 function areaStyle(fill, selected, dim, kind) {
   const district = kind === "district";
   return {
     color: selected ? palette.selected : palette.line,
-    weight: selected ? 2 : district ? 1.4 : 0.6,
+    weight: selected ? 2 : district ? palette.gap : palette.hair,
     opacity: 1,
     fillColor: fill || palette.empty,
     fillOpacity: dim ? 0.4 : 1,
@@ -417,12 +422,15 @@ function dotStyle(nr) {
   const row = precinctRow(nr);
   const valid = row && row.reported && typeof row.validVotes === "number" ? row.validVotes : 0;
   const selected = String(nr) === String(state.highlightNr);
+  const fill = fillFor([nr]);
+  // Before a result the dot is a small solid grey point, not an empty ring.
+  const size = fill ? 3.5 + Math.min(3, Math.sqrt(valid) / 7) : 2.6;
   return {
-    radius: (phoneLayout() ? 0.72 : 1) * (3.5 + Math.min(3, Math.sqrt(valid) / 7)),
+    radius: (phoneLayout() ? 0.72 : 1) * size,
     color: selected ? palette.selected : palette.line,
-    weight: selected ? 2.4 : 1.4,
+    weight: selected ? 2.4 : fill ? 1.2 : 0.8,
     opacity: 1,
-    fillColor: fillFor([nr]) || palette.empty,
+    fillColor: fill || palette.dotEmpty,
     fillOpacity: state.highlightNr && !selected ? 0.4 : 1,
   };
 }

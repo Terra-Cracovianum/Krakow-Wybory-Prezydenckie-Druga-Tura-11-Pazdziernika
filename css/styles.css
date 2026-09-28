@@ -17,7 +17,10 @@
   --map-neutral: #ebe8e3; /* hex */
   --map-empty: #e8e8ed;
   --map-line: #ffffff;
-  --map-border: rgba(29, 29, 31, 0.45);
+  --map-dot-empty: #c7c7cc;
+  --map-gap: 2.4; /* px between districts */
+  --map-hair: 0.8; /* px between precincts */
+  --map-lift: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.06)) drop-shadow(0 6px 18px rgba(0, 0, 0, 0.07));
   --turnout: #2f5f8f; /* hex */
   color-scheme: light dark;
 }
@@ -40,7 +43,10 @@
     --map-neutral: #5b5b60;
     --map-empty: #2c2c2e;
     --map-line: #1c1c1e;
-    --map-border: rgba(245, 245, 247, 0.5);
+    --map-dot-empty: #636366;
+    --map-gap: 1.6;
+    --map-hair: 0.5;
+    --map-lift: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)) drop-shadow(0 8px 22px rgba(0, 0, 0, 0.45));
     --turnout: #5e9bd6;
   }
 }
@@ -796,6 +802,9 @@ html.has-ticker .status::before { background: var(--live); }
 
 .leaflet-overlay-pane { transition: opacity 0.35s ease; }
 
+/* The city rests on the page with a soft shadow instead of a dark outline. */
+.leaflet-overlay-pane svg { filter: var(--map-lift); }
+
 @media (prefers-color-scheme: dark) {
   .leaflet-gl-layer { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9); }
 }
@@ -1014,9 +1023,11 @@ html.has-ticker .status::before { background: var(--live); }
 }
 
 .legend-note i.is-dot {
+  width: 8px;
+  height: 8px;
+  margin: 0 1px;
   border-radius: 50%;
   background: var(--muted);
-  box-shadow: 0 0 0 1.5px var(--map-bg), 0 0 0 2.5px var(--muted);
 }
 
 /* ---------- Hover card ---------- */

@@ -143,7 +143,7 @@ All map colours are CSS variables on `:root`, with a dark-mode set under `prefer
 
 Commissions 413–454 have no polygon. `specialDots` draws each one as a small circle at its polling place, using the same colours. The size grows gently with valid votes. The legend calls them “Szpitale, DPS, areszty”.
 
-The district outlines (`state.borderLayer`, not interactive) sit on top of the precinct view. At city zoom there is no street map. The precincts sit on the plain `--map-bg`, as on 231elections. `fadeBasemap` fades the OpenFreeMap layer in between zoom 13 and 14.4, and lightens the precincts slightly so the streets show through. In dark mode the basemap canvas is inverted with a CSS filter.
+The district outlines (`state.borderLayer`, not interactive) sit on top of the precinct view as gaps in the page colour, not dark lines: `--map-gap` wide between districts and `--map-hair` between precincts (thinner in dark mode). The dissolved outlines never match precinct edges to the pixel, and a gap hides that. The city has no outline of its own; `--map-lift` gives the SVG pane a soft shadow instead. A special commission with no result yet is a small solid `--map-dot-empty` point. At city zoom there is no street map. The precincts sit on the plain `--map-bg`, as on 231elections. `fadeBasemap` fades the OpenFreeMap layer in between zoom 13 and 14.4, and lightens the precincts slightly so the streets show through. In dark mode the basemap canvas is inverted with a CSS filter.
 
 Hovering on a computer shows `#hover-card`, which follows the pointer (`precinctCard`, `districtCard`). On a touch screen (`hover: none`), the first tap shows the same card with a “Pokaż szczegóły” button. A second tap on the same area opens it (`peekFirst`).
 
