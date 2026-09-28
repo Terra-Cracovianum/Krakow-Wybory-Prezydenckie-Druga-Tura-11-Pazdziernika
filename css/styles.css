@@ -285,6 +285,9 @@ html.has-ticker .status::before { background: var(--live); }
 #place-view {
   flex: 1 1 auto;
   min-height: 0;
+  /* A little room inside the scroll area, so focus rings on buttons are not cut off. */
+  margin: 0 -5px;
+  padding: 0 5px 5px;
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
@@ -499,7 +502,13 @@ html.has-ticker .status::before { background: var(--live); }
 
 .search input::placeholder { color: var(--muted); }
 
-.search input:focus { outline: 3px solid color-mix(in srgb, var(--link) 40%, transparent); }
+/* The ring is drawn inside the field, so the scrolling panel never clips it. */
+.search input:focus,
+.search input:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--link) 70%, transparent);
+  background: var(--surface);
+}
 
 .hits {
   list-style: none;
