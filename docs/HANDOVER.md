@@ -38,7 +38,7 @@ Libraries, loaded from unpkg in `index.html`:
 - MapLibre GL 5.24.0
 - `@maplibre/maplibre-gl-leaflet` 0.1.0
 
-The basemap is the OpenFreeMap Positron style (`https://tiles.openfreemap.org/styles/positron`). Fonts are Fraunces and Source Sans 3 from Google Fonts.
+The basemap is the OpenFreeMap Positron style (`https://tiles.openfreemap.org/styles/positron`), and it only appears when zoomed in. The font is the system font (SF Pro on Apple devices), so nothing is downloaded.
 
 ## Files
 
@@ -135,14 +135,17 @@ Sources:
 
 ## Map colour and framing
 
-`outcomeForNumbers` sums reported precincts, ignores withdrawn candidates, and returns the person with the most votes plus their share of valid votes. `choropleth` mixes that candidate’s hex with paper `rgb(244, 244, 244)`. The mix is pale at a 25% share and reaches the candidate colour at 50%:
+The map uses one two-sided scale, so a narrow lead looks narrow. `tally` sums the reported precincts in a list: both candidates' votes, valid votes, eligible voters, and valid cards (or ballots). `marginColor` takes the lead in points of the two-candidate vote, `|a − b| / (a + b) × 100`, and puts it in one of five steps: under 5, 5–10, 10–20, 20–30, and 30 or more. Each step mixes the leader's colour (`candidates.json`) into the neutral `--map-neutral` at `MARGIN_STRENGTH` 0.22, 0.4, 0.58, 0.78 and 1. An exact tie is the neutral colour. An unreported precinct is `--map-empty`.
 
-```text
-amount = 0.34 + clamp((share - 0.25) / 0.25, 0, 1) * 0.66
-channel = round(244 + (channel - 244) * amount)
-```
+The Frekwencja view (`state.view === "turnout"`) uses the same precinct layer with `turnoutColor`: `validCards / eligible` in six steps (under 35%, 35–40, 40–45, 45–50, 50–55, 55% and more), mixed into `--turnout`.
 
-The legend lists every candidate who leads at least one precinct or district in the current view, in ballot order, with a 25% to 50% ramp.
+All map colours are CSS variables on `:root`, with a dark-mode set under `prefers-color-scheme: dark`. `readPalette` copies them into `palette`, and the map repaints when the system theme changes. `--map-neutral` and `--turnout` must stay hex, because `mixHex` parses them.
+
+Commissions 413–454 have no polygon. `specialDots` draws each one as a small circle at its polling place, using the same colours. The size grows gently with valid votes. The legend calls them “Szpitale, DPS, areszty”.
+
+The district outlines (`state.borderLayer`, not interactive) sit on top of the precinct view. At city zoom there is no street map. The precincts sit on the plain `--map-bg`, as on 231elections. `fadeBasemap` fades the OpenFreeMap layer in between zoom 13 and 14.4, and lightens the precincts slightly so the streets show through. In dark mode the basemap canvas is inverted with a CSS filter.
+
+Hovering on a computer shows `#hover-card`, which follows the pointer (`precinctCard`, `districtCard`). On a touch screen (`hover: none`), the first tap shows the same card with a “Pokaż szczegóły” button. A second tap on the same area opens it (`peekFirst`).
 
 `withSurroundings` expands a bounds by a fraction of its span (minimum span 0.008° latitude and 0.01° longitude). `fitCity` uses fraction `0.16`. `fitDistrict` uses `0.42` and `maxZoom` 14. `fitPrecinct` uses `0.42` and `maxZoom` 15. The city fit also sets `minZoom` so the user cannot zoom the city out of the frame.
 
@@ -150,17 +153,21 @@ The MapLibre layer’s own resize handler recentres the canvas without resizing 
 
 ## What the screen does
 
-`setMapView("precincts" | "districts")` swaps the two GeoJSON layers. Choosing Dzielnice while that view is already on toggles the district menu. Escape closes the menu first, then the sheet.
+`setMapView("precincts" | "districts" | "turnout")` swaps the GeoJSON layers. Precincts and turnout share the precinct layer and the dots. Choosing Dzielnice while that view is already on toggles the district menu. Escape closes the menu first, then the sheet.
 
-Clicking a district calls `selectDistrict`. The sheet is `showDistrict`: it fills `#place-view` and adds `is-district` on `.panel`. It does not add `is-place`. `is-place` is what widens the column for the station table (`--place-cols`). The district sheet must stay on the narrow column, 268px (`min(268px, calc(100% - 320px))`).
+Clicking a district calls `selectDistrict`. The sheet is `showDistrict`: it fills `#place-view` and adds `is-district` on `.panel`. It does not add `is-place`. `is-place` is what widens the column for the station table (`--place-cols`). The district sheet must stay on the narrow column, 360px (`min(360px, calc(100% - 320px))`).
 
-The district sheet shows the roman number and the official name, a sentence with the precinct count, a chip per precinct, turnout, counted precincts, valid votes, and the same candidate rows as the city list (`candidateList`). A chip calls `openListedPrecinct`, which leaves district view, shows the precinct layer, and opens the station table via `showPlace`.
+The city view and the district sheet share `duelMarkup`: two percentages facing each other, one split bar with a tick at 50%, and the lead in points (“Gibała +4,92 pkt przewagi”). Before any result, the city view shows the first-round share from `firstRound` in `candidates.json`.
+
+The district sheet shows the roman number and the official name, a sentence with the precinct count, a chip per precinct, turnout, counted precincts, valid votes, and the duel. A chip calls `openListedPrecinct`, which leaves district view, shows the precinct layer, and opens the station table via `showPlace`.
 
 “Miasto” (`data-close`) and “Całe miasto” (`data-district=""`) call `closeSheet`. That clears the highlight, clears `state.district`, and fits the city again.
 
 Search (`#query`) matches a station’s precinct numbers, building name, street, or building number. An exact precinct number sorts above a substring. `/` focuses the box when it is not already focused.
 
-The phone layout starts at `max-width: 860px`. The map is on top and the column becomes a bottom sheet. `html.has-ticker` means the count is finished. On a phone that class shortens the city sheet to `48dvh`, hides the title and the PKW chip, turns the three totals into one row, and collapses the runoff card to a strip. A station or district sheet stays taller (`68dvh`). Below 520px of height the sheet is `50dvh`.
+The phone layout starts at `max-width: 860px`. The map is on top and the column becomes a bottom sheet with three heights, set by `data-detent` on `.panel`: `peek` (the title and the duel), `half` (50dvh) and `full` (88dvh). Drag the handle to resize, or tap it to step through the heights (`bindSheet`). `settleSheet` refits the map after the sheet moves. Opening a station or district from `peek` raises the sheet to `half`. When the count is finished, the runoff card collapses to a strip.
+
+Progress is shown once, in the header status line. `#pkw-wait` and `.count-line` are still filled by the script, but they are hidden.
 
 ## Finished count, confetti, visits
 

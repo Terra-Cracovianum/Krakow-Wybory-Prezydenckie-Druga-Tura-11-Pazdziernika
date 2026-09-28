@@ -63,6 +63,7 @@ async function init() {
   state.precinctFeatures = precincts;
   state.districts = districts;
 
+  readPalette();
   renderSummary();
   renderCandidates();
 
@@ -78,10 +79,12 @@ async function init() {
     maxBoundsViscosity: 1,
     worldCopyJump: false,
   });
-  L.control.zoom({ position: "bottomright" }).addTo(map);
+  new ResetControl({ position: "bottomright" }).addTo(map);
+  L.control.zoom({ position: "bottomright", zoomInTitle: "Przybliż", zoomOutTitle: "Oddal" }).addTo(map);
   const basemap = L.maplibreGL({
     style: "https://tiles.openfreemap.org/styles/positron",
   }).addTo(map);
+  state.basemap = basemap;
   // The plugin's resize handler recenters the canvas without changing its
   // pixel size, so a narrower map leaves the city shifted off the precincts.
   map.off("resize", basemap._resize, basemap);
@@ -96,38 +99,60 @@ async function init() {
   const precinctLayer = L.geoJSON(precincts, {
     style: stylePrecinct,
     onEachFeature(feature, layer) {
+      const nr = feature.properties.nr;
       layer.on({
         mouseover(event) {
-          if (state.highlightNr) return;
-          event.target.setStyle(hoverPrecinct(feature));
-          event.target.bringToFront();
+          if (!state.highlightNr) {
+            event.target.setStyle(hoverPrecinct(feature));
+            event.target.bringToFront();
+            bringBordersToFront();
+          }
+          showHoverCard(event, precinctCard(nr), `p${nr}`);
+        },
+        mousemove(event) {
+          moveHoverCard(event);
         },
         mouseout(event) {
           precinctLayer.resetStyle(event.target);
           bringSelectedToFront();
+          hideHoverCard(`p${nr}`);
         },
-        click() {
-          const stationIndex = stationIndexFor(feature.properties.nr);
-          if (stationIndex >= 0) openStation(stationIndex, feature.properties.nr);
+        click(event) {
+          L.DomEvent.stopPropagation(event);
+          if (peekFirst(event, precinctCard(nr), `p${nr}`)) return;
+          openPrecinct(nr);
         },
       });
     },
   }).addTo(map);
   state.precinctLayer = precinctLayer;
+  state.borderLayer = L.geoJSON(districts, { style: borderStyle, interactive: false }).addTo(map);
+  state.dotLayer = specialDots().addTo(map);
+  map.on("click", () => hideHoverCard());
+  map.on("zoom zoomend", fadeBasemap);
   const districtLayer = L.geoJSON(districts, {
     style: styleDistrict,
     onEachFeature(feature, layer) {
       layer.on({
         mouseover(event) {
-          if (state.district) return;
-          event.target.setStyle(hoverDistrict(feature));
-          event.target.bringToFront();
+          if (!state.district) {
+            event.target.setStyle(hoverDistrict(feature));
+            event.target.bringToFront();
+          }
+          showHoverCard(event, districtCard(feature), `d${feature.properties.dzielnica}`);
+        },
+        mousemove(event) {
+          moveHoverCard(event);
         },
         mouseout(event) {
           districtLayer.resetStyle(event.target);
           bringSelectedDistrictToFront();
+          hideHoverCard(`d${feature.properties.dzielnica}`);
         },
-        click() {
+        click(event) {
+          L.DomEvent.stopPropagation(event);
+          if (peekFirst(event, districtCard(feature), `d${feature.properties.dzielnica}`)) return;
+          hideHoverCard();
           selectDistrict(feature.properties.dzielnica);
         },
       });
@@ -138,6 +163,24 @@ async function init() {
   renderLegend();
   renderDistrictMenu();
   document.querySelector("#mode-precincts").addEventListener("click", () => setMapView("precincts"));
+  document.querySelector("#mode-turnout").addEventListener("click", () => setMapView("turnout"));
+  document.querySelector("#hover-card").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-open]");
+    if (!button) return;
+    const key = button.dataset.open;
+    hideHoverCard();
+    if (key.startsWith("d")) selectDistrict(key.slice(1));
+    else openPrecinct(key.slice(1));
+  });
+  bindSheet();
+  const scheme = window.matchMedia("(prefers-color-scheme: dark)");
+  const repaint = () => {
+    readPalette();
+    paintPrecincts();
+    paintDistricts();
+    renderLegend();
+  };
+  if (scheme.addEventListener) scheme.addEventListener("change", repaint);
   document.querySelector("#mode-districts").addEventListener("click", () => {
     if (state.view === "districts") {
       const menu = document.querySelector("#district-menu");
@@ -152,6 +195,7 @@ async function init() {
     selectDistrict(button.dataset.district);
   });
   fitCity();
+  fadeBasemap();
   const refitSoon = () => {
     if (settling) return;
     map.invalidateSize({ animate: false, pan: false });
@@ -185,49 +229,316 @@ async function init() {
 
 const pathEdge = { lineJoin: "round", lineCap: "round" };
 
+// Map colours live in CSS (light and dark), so the map follows the theme.
+const palette = {};
+
+function readPalette() {
+  const css = getComputedStyle(document.documentElement);
+  const read = (name, fallback) => css.getPropertyValue(name).trim() || fallback;
+  palette.neutral = read("--map-neutral", "#ebe8e3");
+  palette.empty = read("--map-empty", "#e3e3e8");
+  palette.line = read("--map-line", "#ffffff");
+  palette.border = read("--map-border", "rgba(29, 29, 31, 0.42)");
+  palette.selected = read("--ink", "#1d1d1f");
+  palette.turnout = read("--turnout", "#2f5f8f");
+}
+
+// Lead in percentage points of the two-candidate vote: under 5, 5–10, 10–20, 20–30, 30 and more.
+const MARGIN_STEPS = [5, 10, 20, 30];
+const MARGIN_STRENGTH = [0.22, 0.4, 0.58, 0.78, 1];
+// Turnout: under 35%, 35–40, 40–45, 45–50, 50–55, 55% and more.
+const TURNOUT_STEPS = [35, 40, 45, 50, 55];
+const TURNOUT_STRENGTH = [0.16, 0.32, 0.48, 0.64, 0.82, 1];
+
+function stepIndex(value, steps) {
+  let index = 0;
+  while (index < steps.length && value >= steps[index]) index += 1;
+  return index;
+}
+
+function mixHex(from, to, amount) {
+  const a = parseInt(from.slice(1), 16);
+  const b = parseInt(to.slice(1), 16);
+  const channel = (shift) => {
+    const x = (a >> shift) & 255;
+    const y = (b >> shift) & 255;
+    return Math.round(x + (y - x) * amount);
+  };
+  return `rgb(${channel(16)}, ${channel(8)}, ${channel(0)})`;
+}
+
+function tally(nrs) {
+  const [first, second] = state.candidates;
+  const sum = { reported: 0, a: 0, b: 0, valid: 0, eligible: 0, cards: 0 };
+  for (const nr of nrs || []) {
+    const row = state.results.precincts[String(nr)];
+    if (!row || !row.reported) continue;
+    sum.reported += 1;
+    const votes = row.votes || {};
+    if (typeof votes[first.id] === "number") sum.a += votes[first.id];
+    if (typeof votes[second.id] === "number") sum.b += votes[second.id];
+    if (typeof row.validVotes === "number") sum.valid += row.validVotes;
+    if (typeof row.eligible === "number") sum.eligible += row.eligible;
+    const cards = typeof row.validCards === "number" ? row.validCards : row.ballots;
+    if (typeof cards === "number") sum.cards += cards;
+  }
+  return sum;
+}
+
+function marginColor(sum) {
+  const both = sum.a + sum.b;
+  if (!sum.reported || both <= 0) return null;
+  if (sum.a === sum.b) return palette.neutral.startsWith("#") ? palette.neutral : "#ebe8e3";
+  const [first, second] = state.candidates;
+  const lead = sum.a > sum.b ? first : second;
+  const points = (Math.abs(sum.a - sum.b) / both) * 100;
+  return mixHex(palette.neutral, lead.color, MARGIN_STRENGTH[stepIndex(points, MARGIN_STEPS)]);
+}
+
+function turnoutColor(sum) {
+  if (!sum.reported || sum.eligible <= 0) return null;
+  const turnout = (100 * sum.cards) / sum.eligible;
+  return mixHex(palette.neutral, palette.turnout, TURNOUT_STRENGTH[stepIndex(turnout, TURNOUT_STEPS)]);
+}
+
+function fillFor(nrs) {
+  const sum = tally(nrs);
+  return state.view === "turnout" ? turnoutColor(sum) : marginColor(sum);
+}
+
 function stylePrecinct(feature) {
-  const lead = outcomeForNumbers([feature.properties.nr]);
   const selected = String(feature.properties.nr) === String(state.highlightNr);
-  return areaStyle(lead, selected, Boolean(state.highlightNr && !selected), "precinct");
+  return areaStyle(fillFor([feature.properties.nr]), selected, Boolean(state.highlightNr && !selected), "precinct");
 }
 
 function styleDistrict(feature) {
-  const lead = outcomeForNumbers(feature.properties.nrs);
   const selected = feature.properties.dzielnica === state.district;
-  return areaStyle(lead, selected, Boolean(state.district && !selected), "district");
+  return areaStyle(fillFor(feature.properties.nrs), selected, Boolean(state.district && !selected), "district");
 }
 
-function areaStyle(lead, selected, dim, kind) {
+function borderStyle() {
+  return { color: palette.border, weight: 1.1, opacity: 1, fill: false, interactive: false, ...pathEdge };
+}
+
+function areaStyle(fill, selected, dim, kind) {
   const district = kind === "district";
-  if (!lead) {
-    return {
-      color: "rgba(255,255,255,0.85)",
-      weight: district ? 1.2 : 0.4,
-      opacity: 1,
-      fillColor: "#d7deda",
-      fillOpacity: dim ? 0.28 : 0.55,
-      ...pathEdge,
-    };
-  }
   return {
-    color: selected ? "#172026" : "rgba(255,255,255,0.92)",
-    weight: selected ? 1.6 : district ? 1.1 : 0.4,
+    color: selected ? palette.selected : palette.line,
+    weight: selected ? 2 : district ? 1.4 : 0.6,
     opacity: 1,
-    fillColor: choropleth(lead.color, lead.share),
-    fillOpacity: dim ? 0.34 : 0.9,
+    fillColor: fill || palette.empty,
+    fillOpacity: dim ? 0.4 : 1,
     ...pathEdge,
   };
 }
 
 function hoverPrecinct(feature) {
-  const base = stylePrecinct(feature);
-  return { ...base, color: "#ffffff", weight: 1.4, fillOpacity: Math.min(0.98, base.fillOpacity + 0.08) };
+  return { ...stylePrecinct(feature), color: palette.selected, weight: 1.6 };
 }
 
 function hoverDistrict(feature) {
-  const base = styleDistrict(feature);
-  return { ...base, color: "#172026", weight: 2, fillOpacity: Math.min(0.98, base.fillOpacity + 0.06) };
+  return { ...styleDistrict(feature), color: palette.selected, weight: 2.2 };
 }
+
+function bringBordersToFront() {
+  if (state.borderLayer && state.map && state.map.hasLayer(state.borderLayer)) state.borderLayer.bringToFront();
+}
+
+// Commissions 413–454 (hospitals, care homes, prisons) have no polygon, so they get a dot.
+function specialNumbers() {
+  const numbers = [];
+  for (let nr = 1; nr <= state.results.precinctsTotal; nr += 1) {
+    if (!precinctShapeFeature(nr)) numbers.push(String(nr));
+  }
+  return numbers;
+}
+
+function precinctShapeFeature(nr) {
+  if (!state.precinctIndex) {
+    state.precinctIndex = new Set(state.precinctFeatures.features.map((feature) => String(feature.properties.nr)));
+  }
+  return state.precinctIndex.has(String(nr));
+}
+
+function specialDots() {
+  const group = L.layerGroup();
+  state.dots = [];
+  for (const nr of specialNumbers()) {
+    const index = stationIndexFor(nr);
+    if (index < 0) continue;
+    const [lng, lat] = state.stations.features[index].geometry.coordinates;
+    const dot = L.circleMarker([lat, lng], dotStyle(nr));
+    dot.nr = nr;
+    dot.on({
+      mouseover(event) {
+        event.target.setStyle({ color: palette.selected, weight: 2 });
+        showHoverCard(event, precinctCard(nr), `p${nr}`);
+      },
+      mousemove(event) {
+        moveHoverCard(event);
+      },
+      mouseout(event) {
+        event.target.setStyle(dotStyle(nr));
+        hideHoverCard(`p${nr}`);
+      },
+      click(event) {
+        L.DomEvent.stopPropagation(event);
+        if (peekFirst(event, precinctCard(nr), `p${nr}`)) return;
+        openPrecinct(nr);
+      },
+    });
+    group.addLayer(dot);
+    state.dots.push(dot);
+  }
+  return group;
+}
+
+function dotStyle(nr) {
+  const row = precinctRow(nr);
+  const valid = row && row.reported && typeof row.validVotes === "number" ? row.validVotes : 0;
+  const selected = String(nr) === String(state.highlightNr);
+  return {
+    radius: (phoneLayout() ? 0.72 : 1) * (3.5 + Math.min(3, Math.sqrt(valid) / 7)),
+    color: selected ? palette.selected : palette.line,
+    weight: selected ? 2.4 : 1.4,
+    opacity: 1,
+    fillColor: fillFor([nr]) || palette.empty,
+    fillOpacity: state.highlightNr && !selected ? 0.4 : 1,
+  };
+}
+
+function paintDots() {
+  for (const dot of state.dots || []) {
+    dot.setStyle(dotStyle(dot.nr));
+    if (String(dot.nr) === String(state.highlightNr)) dot.bringToFront();
+  }
+}
+
+function openPrecinct(nr) {
+  const stationIndex = stationIndexFor(nr);
+  if (stationIndex < 0) return;
+  hideHoverCard();
+  if (state.view === "districts") showPrecinctMap();
+  openStation(stationIndex, nr);
+}
+
+// Hover card: follows the pointer on a computer. On a touch screen the first
+// tap shows it with a button, and a second tap on the same area opens it.
+let hoverKey = null;
+
+function touchOnly() {
+  return window.matchMedia("(hover: none)").matches;
+}
+
+function showHoverCard(event, html, key) {
+  if (touchOnly()) return;
+  const card = document.querySelector("#hover-card");
+  hoverKey = key;
+  card.innerHTML = html;
+  card.hidden = false;
+  card.classList.remove("is-pinned");
+  moveHoverCard(event);
+}
+
+function moveHoverCard(event) {
+  const card = document.querySelector("#hover-card");
+  if (card.hidden || !event.containerPoint) return;
+  const stage = card.parentElement.getBoundingClientRect();
+  const width = card.offsetWidth;
+  const height = card.offsetHeight;
+  let x = event.containerPoint.x + 16;
+  let y = event.containerPoint.y + 16;
+  if (x + width > stage.width - 8) x = event.containerPoint.x - width - 16;
+  if (y + height > stage.height - 8) y = event.containerPoint.y - height - 16;
+  card.style.transform = `translate(${Math.max(8, x)}px, ${Math.max(8, y)}px)`;
+}
+
+function hideHoverCard(key) {
+  if (key && key !== hoverKey) return;
+  const card = document.querySelector("#hover-card");
+  card.hidden = true;
+  hoverKey = null;
+  state.peek = null;
+}
+
+function peekFirst(event, html, key) {
+  if (!touchOnly() || state.peek === key) return false;
+  const card = document.querySelector("#hover-card");
+  card.innerHTML = html + `<button type="button" class="card-open" data-open="${escapeHtml(key)}">Pokaż szczegóły</button>`;
+  card.hidden = false;
+  card.classList.add("is-pinned");
+  hoverKey = key;
+  state.peek = key;
+  moveHoverCard(event);
+  return true;
+}
+
+function precinctCard(nr) {
+  const index = stationIndexFor(nr);
+  const station = index >= 0 ? state.stations.features[index].properties : null;
+  const special = !precinctShapeFeature(nr);
+  const kicker = special ? `Obwód ${nr} · komisja odrębna` : `Obwód ${nr}`;
+  const place = station ? `<p class="card-place">${escapeHtml(station.siedziba)}</p><p class="card-address">${escapeHtml(address(station))}</p>` : "";
+  return `<p class="card-kicker">${kicker}</p>${place}${cardNumbers(tally([nr]))}`;
+}
+
+function districtCard(feature) {
+  const key = feature.properties.dzielnica;
+  const roman = key.replace("Dzielnica ", "");
+  const sum = tally(feature.properties.nrs);
+  return `<p class="card-kicker">Dzielnica ${escapeHtml(roman)}</p><p class="card-place">${escapeHtml(DISTRICT_TITLE[key] || key)}</p>
+    <p class="card-address">${sum.reported} z ${feature.properties.nrs.length} ${obwodNoun(feature.properties.nrs.length)} policzone</p>${cardNumbers(sum)}`;
+}
+
+function cardNumbers(sum) {
+  if (!sum.reported) return `<p class="card-wait">Jeszcze nie policzono</p>`;
+  const [first, second] = state.candidates;
+  const both = sum.a + sum.b;
+  const width = both > 0 ? (sum.a / both) * 100 : 50;
+  const turnout = sum.eligible > 0 ? formatPercent((100 * sum.cards) / sum.eligible) : "—";
+  return `<div class="card-duel">
+      <span style="--c:${first.color}"><b>${percentLabel(sum.a, sum.valid)}</b>${escapeHtml(first.short)}</span>
+      <span style="--c:${second.color}"><b>${percentLabel(sum.b, sum.valid)}</b>${escapeHtml(second.short)}</span>
+    </div>
+    <div class="split" aria-hidden="true"><span style="width:${width}%;background:${first.color}"></span><span style="background:${second.color}"></span></div>
+    <p class="card-meta">Frekwencja ${turnout} · ${formatCount(sum.valid)} ${voteNoun(sum.valid)}</p>`;
+}
+
+// Street map only when zoomed in far enough to look for a building.
+function fadeBasemap() {
+  const map = state.map;
+  const basemap = state.basemap;
+  if (!map || !basemap || !basemap._container) return;
+  const zoom = map.getZoom();
+  const amount = Math.max(0, Math.min(1, (zoom - 13) / 1.4));
+  basemap._container.style.opacity = String(amount);
+  map.getPane("overlayPane").style.opacity = String(1 - amount * 0.35);
+}
+
+const ResetControl = L.Control.extend({
+  onAdd() {
+    const box = L.DomUtil.create("div", "leaflet-bar reset-control");
+    const button = L.DomUtil.create("a", "", box);
+    button.href = "#";
+    button.title = "Cały Kraków";
+    button.setAttribute("role", "button");
+    button.setAttribute("aria-label", "Pokaż cały Kraków");
+    button.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    L.DomEvent.disableClickPropagation(box);
+    L.DomEvent.on(button, "click", (event) => {
+      L.DomEvent.preventDefault(event);
+      hideHoverCard();
+      if (placeIsOpen()) closeSheet();
+      else if (state.district) selectDistrict("");
+      else {
+        state.map.stop();
+        state.map.setZoom(state.map.getMinZoom(), { animate: false });
+        fitCity();
+      }
+    });
+    return box;
+  },
+});
 
 function bringSelectedToFront() {
   const nr = state.highlightNr;
@@ -281,54 +592,26 @@ function districtRank(name) {
   return index < 0 ? 99 : index;
 }
 
-function outcomeForNumbers(nrs) {
-  const votes = {};
-  let valid = 0;
-  let reported = false;
-  for (const nr of nrs || []) {
-    const row = state.results.precincts[String(nr)];
-    if (!row || !row.reported) continue;
-    reported = true;
-    if (typeof row.validVotes === "number") valid += row.validVotes;
-    for (const candidate of state.candidates) {
-      if (candidate.withdrawn) continue;
-      const value = row.votes && row.votes[candidate.id];
-      if (typeof value === "number") votes[candidate.id] = (votes[candidate.id] || 0) + value;
-    }
-  }
-  if (!reported) return null;
-  let best = null;
-  for (const candidate of state.candidates) {
-    if (candidate.withdrawn) continue;
-    const count = votes[candidate.id] || 0;
-    if (!best || count > best.votes) best = { candidate, votes: count };
-  }
-  if (!best) return null;
-  return { ...best.candidate, votes: best.votes, share: valid > 0 ? best.votes / valid : 0 };
-}
-
-function choropleth(hex, share) {
-  const amount = 0.34 + Math.max(0, Math.min(1, (share - 0.25) / 0.25)) * 0.66;
-  const value = parseInt(hex.slice(1), 16);
-  const mix = (channel) => Math.round(244 + (channel - 244) * amount);
-  return `rgb(${mix((value >> 16) & 255)}, ${mix((value >> 8) & 255)}, ${mix(value & 255)})`;
-}
-
 function setMapView(view) {
   if (placeIsOpen()) closeSheet();
+  hideHoverCard();
   state.view = view;
   state.district = null;
   state.highlightNr = null;
   const districts = view === "districts";
+  const map = state.map;
   if (districts) {
-    state.map.removeLayer(state.precinctLayer);
-    state.districtLayer.addTo(state.map);
+    map.removeLayer(state.precinctLayer);
+    map.removeLayer(state.dotLayer);
+    state.districtLayer.addTo(map);
   } else {
-    state.map.removeLayer(state.districtLayer);
-    state.precinctLayer.addTo(state.map);
+    map.removeLayer(state.districtLayer);
+    state.precinctLayer.addTo(map);
+    state.dotLayer.addTo(map);
   }
-  document.querySelector("#mode-precincts").setAttribute("aria-pressed", String(!districts));
-  document.querySelector("#mode-districts").setAttribute("aria-pressed", String(districts));
+  if (!map.hasLayer(state.borderLayer)) state.borderLayer.addTo(map);
+  bringBordersToFront();
+  syncModeButtons();
   document.querySelector("#district-menu").hidden = !districts;
   paintPrecincts();
   paintDistricts();
@@ -370,20 +653,31 @@ function fitDistrict(key, animate) {
   });
 }
 
+function syncModeButtons() {
+  for (const view of ["precincts", "districts", "turnout"]) {
+    document.querySelector(`#mode-${view}`).setAttribute("aria-pressed", String(state.view === view));
+  }
+}
+
 function renderLegend() {
   const box = document.querySelector("#map-legend");
-  const source = state.view === "districts" ? state.districts.features : state.precinctFeatures.features;
-  const seen = new Map();
-  for (const feature of source) {
-    const lead = outcomeForNumbers(state.view === "districts" ? feature.properties.nrs : [feature.properties.nr]);
-    if (lead && !seen.has(lead.id)) seen.set(lead.id, lead);
+  const empty = `<span class="legend-note"><i style="background:${palette.empty}"></i>Nie policzono</span>`;
+  const dots = state.view === "districts" ? "" : `<span class="legend-note"><i class="is-dot"></i>Szpitale, DPS, areszty</span>`;
+  if (state.view === "turnout") {
+    const swatches = TURNOUT_STRENGTH.map((amount) => `<i style="background:${mixHex(palette.neutral, palette.turnout, amount)}"></i>`).join("");
+    box.innerHTML = `<p class="legend-title">Frekwencja</p>
+      <div class="legend-ramp">${swatches}</div>
+      <p class="legend-scale"><span>poniżej ${TURNOUT_STEPS[0]}%</span><span>${TURNOUT_STEPS[TURNOUT_STEPS.length - 1]}% i więcej</span></p>
+      <div class="legend-notes">${empty}${dots}</div>`;
+    return;
   }
-  const rows = [...seen.values()].sort((a, b) => a.ballot - b.ballot);
-  box.innerHTML = rows.map((lead) => {
-    const pale = choropleth(lead.color, 0.25);
-    const full = choropleth(lead.color, 0.55);
-    return `<span class="legend-row"><i style="background:linear-gradient(90deg, ${pale}, ${full})"></i>${escapeHtml(lead.short)}</span>`;
-  }).join("") + (rows.length ? `<p class="legend-scale"><span>25%</span><span>50%</span></p>` : "");
+  const [first, second] = state.candidates;
+  const side = (candidate) => MARGIN_STRENGTH.map((amount) => `<i style="background:${mixHex(palette.neutral, candidate.color, amount)}"></i>`);
+  const swatches = [...side(first).reverse(), ...side(second)].join("");
+  box.innerHTML = `<p class="legend-heads"><span style="--c:${first.color}">${escapeHtml(first.short)}</span><span style="--c:${second.color}">${escapeHtml(second.short)}</span></p>
+    <div class="legend-ramp is-split">${swatches}</div>
+    <p class="legend-scale"><span>+30 pkt</span><span>wyrównane</span><span>+30 pkt</span></p>
+    <div class="legend-notes">${empty}${dots}</div>`;
 }
 
 function renderDistrictMenu() {
@@ -395,9 +689,9 @@ function renderDistrictMenu() {
   );
   list.innerHTML = features.map((feature) => {
     const key = feature.properties.dzielnica;
-    const lead = outcomeForNumbers(feature.properties.nrs);
+    const fill = marginColor(tally(feature.properties.nrs));
     const roman = key.replace("Dzielnica ", "");
-    const dot = lead ? `<i style="background:${lead.color}"></i>` : "";
+    const dot = fill ? `<i style="background:${fill}"></i>` : "";
     return `<button type="button" data-district="${escapeHtml(key)}" aria-pressed="${state.district === key}">
       <span>${roman}</span><strong>${escapeHtml(DISTRICT_TITLE[key] || key)}</strong>${dot}
     </button>`;
@@ -409,8 +703,13 @@ function paintPrecincts() {
   if (!layer) return;
   layer.eachLayer((shape) => {
     layer.resetStyle(shape);
+  });
+  if (state.borderLayer) state.borderLayer.setStyle(borderStyle());
+  bringBordersToFront();
+  layer.eachLayer((shape) => {
     if (String(shape.feature.properties.nr) === String(state.highlightNr)) shape.bringToFront();
   });
+  paintDots();
 }
 
 function leaderOf(nr) {
@@ -451,8 +750,9 @@ function withSurroundings(bounds, fraction) {
 function viewPadding() {
   const mapEl = document.querySelector("#map").getBoundingClientRect();
   const zoom = document.querySelector(".leaflet-control-zoom");
-  let right = 56;
-  if (zoom) right = Math.max(right, mapEl.right - zoom.getBoundingClientRect().left + 10);
+  const zoomBox = zoom ? zoom.getBoundingClientRect() : null;
+  let right = zoomBox && zoomBox.width ? 56 : 16;
+  if (zoomBox && zoomBox.width) right = Math.max(right, mapEl.right - zoomBox.left + 10);
   return {
     paddingTopLeft: L.point(16, 16),
     paddingBottomRight: L.point(right, 16),
@@ -473,7 +773,8 @@ function fitCity() {
   const size = map.getSize();
   if (size.x < 40 || size.y < 40) return;
   const pad = viewPadding();
-  const frame = withSurroundings(state.cityBounds, 0.16);
+  // A phone has little room, so the city gets a thinner margin there.
+  const frame = withSurroundings(state.cityBounds, phoneLayout() ? 0.04 : 0.16);
   map.setMinZoom(0);
   const fitted = map.getBoundsZoom(frame, false, pad.paddingTopLeft.add(pad.paddingBottomRight));
   if (!Number.isFinite(fitted)) return;
@@ -531,8 +832,9 @@ function focusPadding() {
   const zoom = document.querySelector(".leaflet-control-zoom");
   let top = 48;
   if (chip) top = Math.max(top, chip.getBoundingClientRect().bottom - mapEl.top + 16);
-  let right = 56;
-  if (zoom) right = Math.max(right, mapEl.right - zoom.getBoundingClientRect().left + 10);
+  const zoomBox = zoom ? zoom.getBoundingClientRect() : null;
+  let right = zoomBox && zoomBox.width ? 56 : 24;
+  if (zoomBox && zoomBox.width) right = Math.max(right, mapEl.right - zoomBox.left + 10);
   return {
     paddingTopLeft: L.point(24, top),
     paddingBottomRight: L.point(right, 24),
@@ -639,11 +941,77 @@ function glideCity() {
 }
 
 function openStation(index, nr) {
+  hideHoverCard();
   state.highlightNr = nr ? String(nr) : null;
   paintPrecincts();
   showPlace(state.stations.features[index], state.highlightNr);
   hits.hidden = true;
   query.blur();
+}
+
+function phoneLayout() {
+  return window.matchMedia("(max-width: 860px)").matches;
+}
+
+function setDetent(detent) {
+  const panel = document.querySelector(".panel");
+  if (panel.dataset.detent === detent) return;
+  panel.dataset.detent = detent;
+}
+
+// Phone bottom sheet: drag the handle, or tap it to step between heights.
+function bindSheet() {
+  const panel = document.querySelector(".panel");
+  const handle = panel.querySelector(".sheet-handle");
+  const order = ["peek", "half", "full"];
+  let start = null;
+  handle.addEventListener("pointerdown", (event) => {
+    if (!phoneLayout()) return;
+    start = { y: event.clientY, height: panel.getBoundingClientRect().height, moved: false };
+    handle.setPointerCapture(event.pointerId);
+    panel.classList.add("is-dragging");
+    settling = true;
+  });
+  handle.addEventListener("pointermove", (event) => {
+    if (!start) return;
+    const delta = start.y - event.clientY;
+    if (Math.abs(delta) > 4) start.moved = true;
+    const max = window.innerHeight * 0.9;
+    panel.style.height = `${Math.max(120, Math.min(max, start.height + delta))}px`;
+  });
+  const release = (event) => {
+    if (!start) return;
+    const moved = start.moved;
+    const height = panel.getBoundingClientRect().height;
+    start = null;
+    panel.classList.remove("is-dragging");
+    panel.style.removeProperty("height");
+    if (moved) {
+      const share = height / window.innerHeight;
+      setDetent(share < 0.36 ? "peek" : share < 0.7 ? "half" : "full");
+    } else {
+      const next = order[(order.indexOf(panel.dataset.detent) + 1) % order.length];
+      setDetent(next);
+    }
+    if (event && handle.hasPointerCapture && handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+    settleSheet();
+  };
+  handle.addEventListener("pointerup", release);
+  handle.addEventListener("pointercancel", release);
+}
+
+function settleSheet() {
+  settling = true;
+  window.setTimeout(() => {
+    settling = false;
+    const map = state.map;
+    if (!map) return;
+    map.invalidateSize({ animate: false, pan: false });
+    if (placeIsOpen() && state.focusFeature) fitPrecinct(true);
+    else if (state.view === "districts" && state.district) fitDistrict(state.district, true);
+    else fitCity();
+    syncBasemap();
+  }, 360);
 }
 
 function showPlace(feature, highlightNr) {
@@ -658,7 +1026,9 @@ function showPlace(feature, highlightNr) {
   city.hidden = true;
   place.hidden = false;
   place.innerHTML = stationPopup(feature, highlightNr);
+  place.scrollTop = 0;
   bindPlaceActions(place);
+  if (phoneLayout() && panel.dataset.detent === "peek") setDetent("half");
   requestAnimationFrame(() => easeCity());
 }
 
@@ -675,7 +1045,12 @@ function showDistrict(key) {
   city.hidden = true;
   place.hidden = false;
   place.innerHTML = districtSheet(feature);
+  place.scrollTop = 0;
   bindPlaceActions(place);
+  if (phoneLayout() && panel.dataset.detent === "peek") {
+    setDetent("half");
+    settleSheet();
+  }
 }
 
 function bindPlaceActions(place) {
@@ -698,8 +1073,9 @@ function showPrecinctMap() {
   state.district = null;
   if (state.map.hasLayer(state.districtLayer)) state.map.removeLayer(state.districtLayer);
   if (!state.map.hasLayer(state.precinctLayer)) state.precinctLayer.addTo(state.map);
-  document.querySelector("#mode-precincts").setAttribute("aria-pressed", "true");
-  document.querySelector("#mode-districts").setAttribute("aria-pressed", "false");
+  if (!state.map.hasLayer(state.dotLayer)) state.dotLayer.addTo(state.map);
+  bringBordersToFront();
+  syncModeButtons();
   document.querySelector("#district-menu").hidden = true;
   paintDistricts();
   renderLegend();
@@ -956,7 +1332,7 @@ function runoffPlace(row, place, valid) {
   return `<li class="runoff-place">
     <span class="runoff-mark" style="background:${candidate.color}">${place}</span>
     <span class="runoff-copy">
-      <strong>${escapeHtml(candidate.name)}</strong>
+      <strong>${escapeHtml(displayName(candidate))}</strong>
       <span>${formatCount(votes)} · ${percentLabel(votes, valid)}</span>
     </span>
     <span class="runoff-bar" aria-hidden="true"><span style="width:${width}%;background:${candidate.color}"></span></span>
@@ -998,35 +1374,52 @@ function renderProgress() {
 }
 
 function renderCandidates() {
-  document.querySelector("#candidates").innerHTML = candidateList(state.results.candidates, state.results.validVotes);
+  document.querySelector("#duel").innerHTML = duelMarkup(state.results.candidates, state.results.validVotes, true);
 }
 
-function candidateList(votesById, validVotes) {
-  const max = Math.max(
-    0,
-    ...state.candidates.map((candidate) =>
-      typeof votesById[candidate.id] === "number" ? votesById[candidate.id] : 0
-    )
-  );
-  return state.candidates
-    .map((candidate) => {
-      const votes = votesById[candidate.id];
-      const width = max > 0 && typeof votes === "number" ? (votes / max) * 100 : 0;
-      const label = percentLabel(votes, validVotes);
-      const share = label === "—" ? "" : `<span class="sep"> · </span><span class="share">${label}</span>`;
-      const leader = max > 0 && votes === max && !candidate.withdrawn ? " is-leader" : "";
-      return `<li class="candidate${candidate.withdrawn ? " withdrawn" : ""}${leader}">
-        <header>
-          <span class="swatch" style="background:${candidate.color}"></span>
-          <h2 title="${escapeHtml(candidate.name)}">${candidate.ballot}. ${escapeHtml(candidate.short)}</h2>
-          <span class="count">${formatCount(votes)}${share}</span>
-        </header>
-        <p class="meta">${escapeHtml(candidate.committee)}</p>
-        ${candidate.note ? `<p class="note">${escapeHtml(candidate.note)}</p>` : ""}
-        <div class="bar" aria-hidden="true"><span style="width:${width}%;background:${candidate.color}"></span></div>
-      </li>`;
-    })
-    .join("");
+// Two candidates facing each other, with one bar split between them.
+function duelMarkup(votesById, validVotes, city) {
+  const [first, second] = state.candidates;
+  const votesOf = (candidate) => (votesById && typeof votesById[candidate.id] === "number" ? votesById[candidate.id] : null);
+  const a = votesOf(first);
+  const b = votesOf(second);
+  const counted = a !== null && b !== null && typeof validVotes === "number" && validVotes > 0;
+  const lead = counted && a !== b ? (a > b ? first : second) : null;
+  const side = (candidate, votes, align) => {
+    const detail = counted
+      ? `${formatCount(votes)} ${voteNoun(votes)}`
+      : city && candidate.firstRound
+        ? `I tura: ${formatPercent(candidate.firstRound.share)}`
+        : "";
+    const ahead = lead && lead.id === candidate.id ? " is-ahead" : "";
+    return `<div class="duel-side ${align}${ahead}" style="--c:${candidate.color}">
+        <span class="duel-name" title="${escapeHtml(candidate.name)}">${escapeHtml(city ? displayName(candidate) : candidate.short)}</span>
+        <strong class="duel-pct">${counted ? percentLabel(votes, validVotes) : "—"}</strong>
+        <span class="duel-votes">${detail}</span>
+      </div>`;
+  };
+  const both = counted ? a + b : 0;
+  const width = both > 0 ? (a / both) * 100 : 50;
+  let note = "";
+  if (counted) {
+    note = lead
+      ? `<p class="duel-lead"><b style="color:${lead.color}">${escapeHtml(lead.short)} +${formatPoints((100 * Math.abs(a - b)) / validVotes)}</b> przewagi</p>`
+      : `<p class="duel-lead"><b>Remis</b></p>`;
+  }
+  return `<div class="duel-grid">${side(first, a, "is-left")}${side(second, b, "is-right")}</div>
+    <div class="split is-large${counted ? "" : " is-empty"}" aria-hidden="true">
+      <span style="width:${width}%;background:${first.color}"></span><span style="background:${second.color}"></span><i></i>
+    </div>${note}`;
+}
+
+function displayName(candidate) {
+  const words = candidate.name.split(" ");
+  return words.length > 2 ? `${words[0]} ${words[words.length - 1]}` : candidate.name;
+}
+
+function formatPoints(value) {
+  const rounded = pkwRound(value, 2);
+  return `${new Intl.NumberFormat("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(rounded)} pkt`;
 }
 
 function stationPopup(feature, highlightNr) {
@@ -1060,7 +1453,7 @@ function stationPopup(feature, highlightNr) {
       const tds = numbers.map((nr) => voteCell(candidate, precinctRow(nr), nr, highlightNr)).join("");
       const tail = showTotal ? voteTotalCell(candidate, total) : "";
       return `<tr>
-        <th scope="row"><span class="who"><span class="swatch" style="background:${candidate.color}"></span><span>${escapeHtml(candidate.short)}</span>${note}</span></th>
+        <th scope="row" class="is-candidate" style="--c:${candidate.color}"><span class="who"><span>${escapeHtml(candidate.short)}</span>${note}</span></th>
         ${tds}${tail}
       </tr>`;
     })
@@ -1123,7 +1516,7 @@ function districtSheet(feature) {
       <div><span>Obwody</span><strong>${counted}</strong></div>
       <div><span>Ważne głosy</span><strong>${formatCount(total.validVotes)}</strong></div>
     </section>
-    <ol class="candidates">${candidateList(total.votes, total.validVotes)}</ol>`;
+    <section class="duel">${duelMarkup(total.votes, total.validVotes, false)}</section>`;
 }
 
 function obwodNoun(count) {
