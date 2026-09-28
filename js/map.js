@@ -1630,13 +1630,15 @@ function renderCountdown(box) {
   const voting = now >= POLLS_OPEN_AT;
   const target = voting ? POLLS_CLOSE_AT : POLLS_OPEN_AT;
   const left = splitTime(target - now);
+  // Days only while there is at least one; the last night shows hours.
+  const showDays = !voting && left.days > 0;
   const tiles = [
-    ...(voting ? [] : [[left.days, dayNoun(left.days)]]),
+    ...(showDays ? [[left.days, dayNoun(left.days)]] : []),
     [left.hours, "godz."],
     [left.minutes, "min"],
     [left.seconds, "sek"],
   ]
-    .map(([value, unit], index) => `<span class="countdown-tile"><b>${voting || index > 0 ? pad2(value) : value}</b><small>${unit}</small></span>`)
+    .map(([value, unit], index) => `<span class="countdown-tile"><b>${showDays && index === 0 ? value : pad2(value)}</b><small>${unit}</small></span>`)
     .join("");
   let note;
   if (voting) {
@@ -1650,7 +1652,7 @@ function renderCountdown(box) {
   }
   const title = voting ? "Lokale otwarte · do zamknięcia zostało" : "Otwarcie lokali za";
   box.innerHTML = `<p class="countdown-title">${title}</p>
-    <div class="countdown-tiles${voting ? " is-three" : ""}" aria-hidden="true">${tiles}</div>${note}`;
+    <div class="countdown-tiles${showDays ? "" : " is-three"}" aria-hidden="true">${tiles}</div>${note}`;
   const spoken = voting
     ? `Lokale otwarte do 21:00.`
     : `Lokale otwierają się w niedzielę 11 października o 7:00, za ${left.days} ${dayNoun(left.days)} i ${left.hours} godz.`;
