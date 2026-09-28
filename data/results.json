@@ -1,0 +1,1372 @@
+{
+  "status": "awaiting",
+  "round": 2,
+  "updatedAt": "2026-09-28T12:00:00+02:00",
+  "precinctsTotal": 454,
+  "precinctsReporting": 0,
+  "candidates": {},
+  "precincts": {
+    "1": {
+      "reported": false
+    },
+    "2": {
+      "reported": false
+    },
+    "3": {
+      "reported": false
+    },
+    "4": {
+      "reported": false
+    },
+    "5": {
+      "reported": false
+    },
+    "6": {
+      "reported": false
+    },
+    "7": {
+      "reported": false
+    },
+    "8": {
+      "reported": false
+    },
+    "9": {
+      "reported": false
+    },
+    "10": {
+      "reported": false
+    },
+    "11": {
+      "reported": false
+    },
+    "12": {
+      "reported": false
+    },
+    "13": {
+      "reported": false
+    },
+    "14": {
+      "reported": false
+    },
+    "15": {
+      "reported": false
+    },
+    "16": {
+      "reported": false
+    },
+    "17": {
+      "reported": false
+    },
+    "18": {
+      "reported": false
+    },
+    "19": {
+      "reported": false
+    },
+    "20": {
+      "reported": false
+    },
+    "21": {
+      "reported": false
+    },
+    "22": {
+      "reported": false
+    },
+    "23": {
+      "reported": false
+    },
+    "24": {
+      "reported": false
+    },
+    "25": {
+      "reported": false
+    },
+    "26": {
+      "reported": false
+    },
+    "27": {
+      "reported": false
+    },
+    "28": {
+      "reported": false
+    },
+    "29": {
+      "reported": false
+    },
+    "30": {
+      "reported": false
+    },
+    "31": {
+      "reported": false
+    },
+    "32": {
+      "reported": false
+    },
+    "33": {
+      "reported": false
+    },
+    "34": {
+      "reported": false
+    },
+    "35": {
+      "reported": false
+    },
+    "36": {
+      "reported": false
+    },
+    "37": {
+      "reported": false
+    },
+    "38": {
+      "reported": false
+    },
+    "39": {
+      "reported": false
+    },
+    "40": {
+      "reported": false
+    },
+    "41": {
+      "reported": false
+    },
+    "42": {
+      "reported": false
+    },
+    "43": {
+      "reported": false
+    },
+    "44": {
+      "reported": false
+    },
+    "45": {
+      "reported": false
+    },
+    "46": {
+      "reported": false
+    },
+    "47": {
+      "reported": false
+    },
+    "48": {
+      "reported": false
+    },
+    "49": {
+      "reported": false
+    },
+    "50": {
+      "reported": false
+    },
+    "51": {
+      "reported": false
+    },
+    "52": {
+      "reported": false
+    },
+    "53": {
+      "reported": false
+    },
+    "54": {
+      "reported": false
+    },
+    "55": {
+      "reported": false
+    },
+    "56": {
+      "reported": false
+    },
+    "57": {
+      "reported": false
+    },
+    "58": {
+      "reported": false
+    },
+    "59": {
+      "reported": false
+    },
+    "60": {
+      "reported": false
+    },
+    "61": {
+      "reported": false
+    },
+    "62": {
+      "reported": false
+    },
+    "63": {
+      "reported": false
+    },
+    "64": {
+      "reported": false
+    },
+    "65": {
+      "reported": false
+    },
+    "66": {
+      "reported": false
+    },
+    "67": {
+      "reported": false
+    },
+    "68": {
+      "reported": false
+    },
+    "69": {
+      "reported": false
+    },
+    "70": {
+      "reported": false
+    },
+    "71": {
+      "reported": false
+    },
+    "72": {
+      "reported": false
+    },
+    "73": {
+      "reported": false
+    },
+    "74": {
+      "reported": false
+    },
+    "75": {
+      "reported": false
+    },
+    "76": {
+      "reported": false
+    },
+    "77": {
+      "reported": false
+    },
+    "78": {
+      "reported": false
+    },
+    "79": {
+      "reported": false
+    },
+    "80": {
+      "reported": false
+    },
+    "81": {
+      "reported": false
+    },
+    "82": {
+      "reported": false
+    },
+    "83": {
+      "reported": false
+    },
+    "84": {
+      "reported": false
+    },
+    "85": {
+      "reported": false
+    },
+    "86": {
+      "reported": false
+    },
+    "87": {
+      "reported": false
+    },
+    "88": {
+      "reported": false
+    },
+    "89": {
+      "reported": false
+    },
+    "90": {
+      "reported": false
+    },
+    "91": {
+      "reported": false
+    },
+    "92": {
+      "reported": false
+    },
+    "93": {
+      "reported": false
+    },
+    "94": {
+      "reported": false
+    },
+    "95": {
+      "reported": false
+    },
+    "96": {
+      "reported": false
+    },
+    "97": {
+      "reported": false
+    },
+    "98": {
+      "reported": false
+    },
+    "99": {
+      "reported": false
+    },
+    "100": {
+      "reported": false
+    },
+    "101": {
+      "reported": false
+    },
+    "102": {
+      "reported": false
+    },
+    "103": {
+      "reported": false
+    },
+    "104": {
+      "reported": false
+    },
+    "105": {
+      "reported": false
+    },
+    "106": {
+      "reported": false
+    },
+    "107": {
+      "reported": false
+    },
+    "108": {
+      "reported": false
+    },
+    "109": {
+      "reported": false
+    },
+    "110": {
+      "reported": false
+    },
+    "111": {
+      "reported": false
+    },
+    "112": {
+      "reported": false
+    },
+    "113": {
+      "reported": false
+    },
+    "114": {
+      "reported": false
+    },
+    "115": {
+      "reported": false
+    },
+    "116": {
+      "reported": false
+    },
+    "117": {
+      "reported": false
+    },
+    "118": {
+      "reported": false
+    },
+    "119": {
+      "reported": false
+    },
+    "120": {
+      "reported": false
+    },
+    "121": {
+      "reported": false
+    },
+    "122": {
+      "reported": false
+    },
+    "123": {
+      "reported": false
+    },
+    "124": {
+      "reported": false
+    },
+    "125": {
+      "reported": false
+    },
+    "126": {
+      "reported": false
+    },
+    "127": {
+      "reported": false
+    },
+    "128": {
+      "reported": false
+    },
+    "129": {
+      "reported": false
+    },
+    "130": {
+      "reported": false
+    },
+    "131": {
+      "reported": false
+    },
+    "132": {
+      "reported": false
+    },
+    "133": {
+      "reported": false
+    },
+    "134": {
+      "reported": false
+    },
+    "135": {
+      "reported": false
+    },
+    "136": {
+      "reported": false
+    },
+    "137": {
+      "reported": false
+    },
+    "138": {
+      "reported": false
+    },
+    "139": {
+      "reported": false
+    },
+    "140": {
+      "reported": false
+    },
+    "141": {
+      "reported": false
+    },
+    "142": {
+      "reported": false
+    },
+    "143": {
+      "reported": false
+    },
+    "144": {
+      "reported": false
+    },
+    "145": {
+      "reported": false
+    },
+    "146": {
+      "reported": false
+    },
+    "147": {
+      "reported": false
+    },
+    "148": {
+      "reported": false
+    },
+    "149": {
+      "reported": false
+    },
+    "150": {
+      "reported": false
+    },
+    "151": {
+      "reported": false
+    },
+    "152": {
+      "reported": false
+    },
+    "153": {
+      "reported": false
+    },
+    "154": {
+      "reported": false
+    },
+    "155": {
+      "reported": false
+    },
+    "156": {
+      "reported": false
+    },
+    "157": {
+      "reported": false
+    },
+    "158": {
+      "reported": false
+    },
+    "159": {
+      "reported": false
+    },
+    "160": {
+      "reported": false
+    },
+    "161": {
+      "reported": false
+    },
+    "162": {
+      "reported": false
+    },
+    "163": {
+      "reported": false
+    },
+    "164": {
+      "reported": false
+    },
+    "165": {
+      "reported": false
+    },
+    "166": {
+      "reported": false
+    },
+    "167": {
+      "reported": false
+    },
+    "168": {
+      "reported": false
+    },
+    "169": {
+      "reported": false
+    },
+    "170": {
+      "reported": false
+    },
+    "171": {
+      "reported": false
+    },
+    "172": {
+      "reported": false
+    },
+    "173": {
+      "reported": false
+    },
+    "174": {
+      "reported": false
+    },
+    "175": {
+      "reported": false
+    },
+    "176": {
+      "reported": false
+    },
+    "177": {
+      "reported": false
+    },
+    "178": {
+      "reported": false
+    },
+    "179": {
+      "reported": false
+    },
+    "180": {
+      "reported": false
+    },
+    "181": {
+      "reported": false
+    },
+    "182": {
+      "reported": false
+    },
+    "183": {
+      "reported": false
+    },
+    "184": {
+      "reported": false
+    },
+    "185": {
+      "reported": false
+    },
+    "186": {
+      "reported": false
+    },
+    "187": {
+      "reported": false
+    },
+    "188": {
+      "reported": false
+    },
+    "189": {
+      "reported": false
+    },
+    "190": {
+      "reported": false
+    },
+    "191": {
+      "reported": false
+    },
+    "192": {
+      "reported": false
+    },
+    "193": {
+      "reported": false
+    },
+    "194": {
+      "reported": false
+    },
+    "195": {
+      "reported": false
+    },
+    "196": {
+      "reported": false
+    },
+    "197": {
+      "reported": false
+    },
+    "198": {
+      "reported": false
+    },
+    "199": {
+      "reported": false
+    },
+    "200": {
+      "reported": false
+    },
+    "201": {
+      "reported": false
+    },
+    "202": {
+      "reported": false
+    },
+    "203": {
+      "reported": false
+    },
+    "204": {
+      "reported": false
+    },
+    "205": {
+      "reported": false
+    },
+    "206": {
+      "reported": false
+    },
+    "207": {
+      "reported": false
+    },
+    "208": {
+      "reported": false
+    },
+    "209": {
+      "reported": false
+    },
+    "210": {
+      "reported": false
+    },
+    "211": {
+      "reported": false
+    },
+    "212": {
+      "reported": false
+    },
+    "213": {
+      "reported": false
+    },
+    "214": {
+      "reported": false
+    },
+    "215": {
+      "reported": false
+    },
+    "216": {
+      "reported": false
+    },
+    "217": {
+      "reported": false
+    },
+    "218": {
+      "reported": false
+    },
+    "219": {
+      "reported": false
+    },
+    "220": {
+      "reported": false
+    },
+    "221": {
+      "reported": false
+    },
+    "222": {
+      "reported": false
+    },
+    "223": {
+      "reported": false
+    },
+    "224": {
+      "reported": false
+    },
+    "225": {
+      "reported": false
+    },
+    "226": {
+      "reported": false
+    },
+    "227": {
+      "reported": false
+    },
+    "228": {
+      "reported": false
+    },
+    "229": {
+      "reported": false
+    },
+    "230": {
+      "reported": false
+    },
+    "231": {
+      "reported": false
+    },
+    "232": {
+      "reported": false
+    },
+    "233": {
+      "reported": false
+    },
+    "234": {
+      "reported": false
+    },
+    "235": {
+      "reported": false
+    },
+    "236": {
+      "reported": false
+    },
+    "237": {
+      "reported": false
+    },
+    "238": {
+      "reported": false
+    },
+    "239": {
+      "reported": false
+    },
+    "240": {
+      "reported": false
+    },
+    "241": {
+      "reported": false
+    },
+    "242": {
+      "reported": false
+    },
+    "243": {
+      "reported": false
+    },
+    "244": {
+      "reported": false
+    },
+    "245": {
+      "reported": false
+    },
+    "246": {
+      "reported": false
+    },
+    "247": {
+      "reported": false
+    },
+    "248": {
+      "reported": false
+    },
+    "249": {
+      "reported": false
+    },
+    "250": {
+      "reported": false
+    },
+    "251": {
+      "reported": false
+    },
+    "252": {
+      "reported": false
+    },
+    "253": {
+      "reported": false
+    },
+    "254": {
+      "reported": false
+    },
+    "255": {
+      "reported": false
+    },
+    "256": {
+      "reported": false
+    },
+    "257": {
+      "reported": false
+    },
+    "258": {
+      "reported": false
+    },
+    "259": {
+      "reported": false
+    },
+    "260": {
+      "reported": false
+    },
+    "261": {
+      "reported": false
+    },
+    "262": {
+      "reported": false
+    },
+    "263": {
+      "reported": false
+    },
+    "264": {
+      "reported": false
+    },
+    "265": {
+      "reported": false
+    },
+    "266": {
+      "reported": false
+    },
+    "267": {
+      "reported": false
+    },
+    "268": {
+      "reported": false
+    },
+    "269": {
+      "reported": false
+    },
+    "270": {
+      "reported": false
+    },
+    "271": {
+      "reported": false
+    },
+    "272": {
+      "reported": false
+    },
+    "273": {
+      "reported": false
+    },
+    "274": {
+      "reported": false
+    },
+    "275": {
+      "reported": false
+    },
+    "276": {
+      "reported": false
+    },
+    "277": {
+      "reported": false
+    },
+    "278": {
+      "reported": false
+    },
+    "279": {
+      "reported": false
+    },
+    "280": {
+      "reported": false
+    },
+    "281": {
+      "reported": false
+    },
+    "282": {
+      "reported": false
+    },
+    "283": {
+      "reported": false
+    },
+    "284": {
+      "reported": false
+    },
+    "285": {
+      "reported": false
+    },
+    "286": {
+      "reported": false
+    },
+    "287": {
+      "reported": false
+    },
+    "288": {
+      "reported": false
+    },
+    "289": {
+      "reported": false
+    },
+    "290": {
+      "reported": false
+    },
+    "291": {
+      "reported": false
+    },
+    "292": {
+      "reported": false
+    },
+    "293": {
+      "reported": false
+    },
+    "294": {
+      "reported": false
+    },
+    "295": {
+      "reported": false
+    },
+    "296": {
+      "reported": false
+    },
+    "297": {
+      "reported": false
+    },
+    "298": {
+      "reported": false
+    },
+    "299": {
+      "reported": false
+    },
+    "300": {
+      "reported": false
+    },
+    "301": {
+      "reported": false
+    },
+    "302": {
+      "reported": false
+    },
+    "303": {
+      "reported": false
+    },
+    "304": {
+      "reported": false
+    },
+    "305": {
+      "reported": false
+    },
+    "306": {
+      "reported": false
+    },
+    "307": {
+      "reported": false
+    },
+    "308": {
+      "reported": false
+    },
+    "309": {
+      "reported": false
+    },
+    "310": {
+      "reported": false
+    },
+    "311": {
+      "reported": false
+    },
+    "312": {
+      "reported": false
+    },
+    "313": {
+      "reported": false
+    },
+    "314": {
+      "reported": false
+    },
+    "315": {
+      "reported": false
+    },
+    "316": {
+      "reported": false
+    },
+    "317": {
+      "reported": false
+    },
+    "318": {
+      "reported": false
+    },
+    "319": {
+      "reported": false
+    },
+    "320": {
+      "reported": false
+    },
+    "321": {
+      "reported": false
+    },
+    "322": {
+      "reported": false
+    },
+    "323": {
+      "reported": false
+    },
+    "324": {
+      "reported": false
+    },
+    "325": {
+      "reported": false
+    },
+    "326": {
+      "reported": false
+    },
+    "327": {
+      "reported": false
+    },
+    "328": {
+      "reported": false
+    },
+    "329": {
+      "reported": false
+    },
+    "330": {
+      "reported": false
+    },
+    "331": {
+      "reported": false
+    },
+    "332": {
+      "reported": false
+    },
+    "333": {
+      "reported": false
+    },
+    "334": {
+      "reported": false
+    },
+    "335": {
+      "reported": false
+    },
+    "336": {
+      "reported": false
+    },
+    "337": {
+      "reported": false
+    },
+    "338": {
+      "reported": false
+    },
+    "339": {
+      "reported": false
+    },
+    "340": {
+      "reported": false
+    },
+    "341": {
+      "reported": false
+    },
+    "342": {
+      "reported": false
+    },
+    "343": {
+      "reported": false
+    },
+    "344": {
+      "reported": false
+    },
+    "345": {
+      "reported": false
+    },
+    "346": {
+      "reported": false
+    },
+    "347": {
+      "reported": false
+    },
+    "348": {
+      "reported": false
+    },
+    "349": {
+      "reported": false
+    },
+    "350": {
+      "reported": false
+    },
+    "351": {
+      "reported": false
+    },
+    "352": {
+      "reported": false
+    },
+    "353": {
+      "reported": false
+    },
+    "354": {
+      "reported": false
+    },
+    "355": {
+      "reported": false
+    },
+    "356": {
+      "reported": false
+    },
+    "357": {
+      "reported": false
+    },
+    "358": {
+      "reported": false
+    },
+    "359": {
+      "reported": false
+    },
+    "360": {
+      "reported": false
+    },
+    "361": {
+      "reported": false
+    },
+    "362": {
+      "reported": false
+    },
+    "363": {
+      "reported": false
+    },
+    "364": {
+      "reported": false
+    },
+    "365": {
+      "reported": false
+    },
+    "366": {
+      "reported": false
+    },
+    "367": {
+      "reported": false
+    },
+    "368": {
+      "reported": false
+    },
+    "369": {
+      "reported": false
+    },
+    "370": {
+      "reported": false
+    },
+    "371": {
+      "reported": false
+    },
+    "372": {
+      "reported": false
+    },
+    "373": {
+      "reported": false
+    },
+    "374": {
+      "reported": false
+    },
+    "375": {
+      "reported": false
+    },
+    "376": {
+      "reported": false
+    },
+    "377": {
+      "reported": false
+    },
+    "378": {
+      "reported": false
+    },
+    "379": {
+      "reported": false
+    },
+    "380": {
+      "reported": false
+    },
+    "381": {
+      "reported": false
+    },
+    "382": {
+      "reported": false
+    },
+    "383": {
+      "reported": false
+    },
+    "384": {
+      "reported": false
+    },
+    "385": {
+      "reported": false
+    },
+    "386": {
+      "reported": false
+    },
+    "387": {
+      "reported": false
+    },
+    "388": {
+      "reported": false
+    },
+    "389": {
+      "reported": false
+    },
+    "390": {
+      "reported": false
+    },
+    "391": {
+      "reported": false
+    },
+    "392": {
+      "reported": false
+    },
+    "393": {
+      "reported": false
+    },
+    "394": {
+      "reported": false
+    },
+    "395": {
+      "reported": false
+    },
+    "396": {
+      "reported": false
+    },
+    "397": {
+      "reported": false
+    },
+    "398": {
+      "reported": false
+    },
+    "399": {
+      "reported": false
+    },
+    "400": {
+      "reported": false
+    },
+    "401": {
+      "reported": false
+    },
+    "402": {
+      "reported": false
+    },
+    "403": {
+      "reported": false
+    },
+    "404": {
+      "reported": false
+    },
+    "405": {
+      "reported": false
+    },
+    "406": {
+      "reported": false
+    },
+    "407": {
+      "reported": false
+    },
+    "408": {
+      "reported": false
+    },
+    "409": {
+      "reported": false
+    },
+    "410": {
+      "reported": false
+    },
+    "411": {
+      "reported": false
+    },
+    "412": {
+      "reported": false
+    },
+    "413": {
+      "reported": false
+    },
+    "414": {
+      "reported": false
+    },
+    "415": {
+      "reported": false
+    },
+    "416": {
+      "reported": false
+    },
+    "417": {
+      "reported": false
+    },
+    "418": {
+      "reported": false
+    },
+    "419": {
+      "reported": false
+    },
+    "420": {
+      "reported": false
+    },
+    "421": {
+      "reported": false
+    },
+    "422": {
+      "reported": false
+    },
+    "423": {
+      "reported": false
+    },
+    "424": {
+      "reported": false
+    },
+    "425": {
+      "reported": false
+    },
+    "426": {
+      "reported": false
+    },
+    "427": {
+      "reported": false
+    },
+    "428": {
+      "reported": false
+    },
+    "429": {
+      "reported": false
+    },
+    "430": {
+      "reported": false
+    },
+    "431": {
+      "reported": false
+    },
+    "432": {
+      "reported": false
+    },
+    "433": {
+      "reported": false
+    },
+    "434": {
+      "reported": false
+    },
+    "435": {
+      "reported": false
+    },
+    "436": {
+      "reported": false
+    },
+    "437": {
+      "reported": false
+    },
+    "438": {
+      "reported": false
+    },
+    "439": {
+      "reported": false
+    },
+    "440": {
+      "reported": false
+    },
+    "441": {
+      "reported": false
+    },
+    "442": {
+      "reported": false
+    },
+    "443": {
+      "reported": false
+    },
+    "444": {
+      "reported": false
+    },
+    "445": {
+      "reported": false
+    },
+    "446": {
+      "reported": false
+    },
+    "447": {
+      "reported": false
+    },
+    "448": {
+      "reported": false
+    },
+    "449": {
+      "reported": false
+    },
+    "450": {
+      "reported": false
+    },
+    "451": {
+      "reported": false
+    },
+    "452": {
+      "reported": false
+    },
+    "453": {
+      "reported": false
+    },
+    "454": {
+      "reported": false
+    }
+  }
+}

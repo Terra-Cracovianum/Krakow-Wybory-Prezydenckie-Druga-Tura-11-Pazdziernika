@@ -1,0 +1,29 @@
+{
+  "source": "Ponowne głosowanie (druga tura) 11 października 2026 r. Kandydaci z dwoma najlepszymi wynikami pierwszej tury z 27 września 2026 r. Kolejność na karcie alfabetyczna.",
+  "candidates": [
+    {
+      "id": "gibala",
+      "ballot": 1,
+      "name": "Łukasz Gibała",
+      "short": "Gibała",
+      "age": 49,
+      "education": "wyższe",
+      "party": "nie należy do partii politycznej",
+      "committee": "KWW Łukasza Gibały – Kraków dla Mieszkańców",
+      "color": "#ff8a3d",
+      "feminine": false
+    },
+    {
+      "id": "piatkowska",
+      "ballot": 2,
+      "name": "Monika Jadwiga Piątkowska",
+      "short": "Piątkowska",
+      "age": 52,
+      "education": "wyższe",
+      "party": "członek Koalicji Obywatelskiej",
+      "committee": "KWW Moniki Piątkowskiej – Ponad Podziałami",
+      "color": "#ff7eb3",
+      "feminine": true
+    }
+  ]
+}

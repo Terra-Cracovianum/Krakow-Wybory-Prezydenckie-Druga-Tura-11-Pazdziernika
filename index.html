@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wybory prezydenta Krakowa · druga tura, 11 października 2026</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2314171c'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23d7c4a3'/%3E%3C/svg%3E" />
+    <meta
+      name="description"
+      content="Mapa obwodów i lokali wyborczych oraz wyniki drugiej tury wyborów prezydenta Krakowa, 11 października 2026. Łukasz Gibała i Monika Piątkowska."
+    />
+    <link rel="canonical" href="https://terra-cracovianum.github.io/Krakow-Wybory-Prezydenckie-Druga-Tura-11-Pazdziernika/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pl_PL" />
+    <meta property="og:site_name" content="Wybory prezydenta Krakowa" />
+    <meta property="og:title" content="Wybory prezydenta Krakowa · druga tura, 11 października 2026" />
+    <meta property="og:description" content="Gibała czy Piątkowska? Mapa wyników drugiej tury wyborów prezydenta Krakowa. Kolor dzielnicy pokazuje, kto w niej prowadzi." />
+    <meta property="og:url" content="https://terra-cracovianum.github.io/Krakow-Wybory-Prezydenckie-Druga-Tura-11-Pazdziernika/" />
+    <meta property="og:image" content="https://terra-cracovianum.github.io/Krakow-Wybory-Prezydenckie-Druga-Tura-11-Pazdziernika/druga-tura.jpg" />
+    <meta property="og:image:secure_url" content="https://terra-cracovianum.github.io/Krakow-Wybory-Prezydenckie-Druga-Tura-11-Pazdziernika/druga-tura.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Mapa dzielnic Krakowa. Druga tura wyborów prezydenta, 11 października 2026: Łukasz Gibała i Monika Piątkowska." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Wybory prezydenta Krakowa · druga tura, 11 października 2026" />
+    <meta name="twitter:description" content="Gibała czy Piątkowska? Mapa wyników drugiej tury wyborów prezydenta Krakowa. Kolor dzielnicy pokazuje, kto w niej prowadzi." />
+    <meta name="twitter:image" content="https://terra-cracovianum.github.io/Krakow-Wybory-Prezydenckie-Druga-Tura-11-Pazdziernika/druga-tura.jpg" />
+    <meta name="twitter:image:alt" content="Mapa dzielnic Krakowa. Druga tura wyborów prezydenta, 11 października 2026: Łukasz Gibała i Monika Piątkowska." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,680&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div id="ticker" class="ticker" hidden>
+      <p class="ticker-label">Ważne</p>
+      <p id="ticker-live" class="ticker-live" aria-live="polite"></p>
+      <div class="ticker-viewport" aria-hidden="true">
+        <div class="ticker-track" id="ticker-track"></div>
+      </div>
+    </div>
+    <div class="app">
+      <aside class="panel">
+        <header class="mast">
+          <p class="status" id="status">
+            <span id="status-label">Oczekiwanie na wyniki</span>
+            <span id="status-meta" hidden></span>
+            <span class="status-meter" hidden></span>
+          </p>
+          <p class="kicker">Druga tura</p>
+          <h1>Prezydent Miasta Krakowa</h1>
+          <p class="when">11 października 2026 · lokale 7:00–21:00</p>
+          <p class="sample" id="sample" hidden>
+            Dane przykładowe. To nie są wyniki wyborów. Podgląd pokazuje tylko, jak strona wygląda, gdy liczby zaczynają spływać.
+          </p>
+        </header>
+
+        <label class="search">
+          <span>Szukaj lokalu lub numeru obwodu</span>
+          <input id="query" type="search" placeholder="np. 12 albo Dietla" autocomplete="off" />
+        </label>
+        <ul class="hits" id="hits" hidden></ul>
+
+        <div id="city-view">
+          <section class="totals" aria-label="Wyniki miasta">
+            <div>
+              <span>Frekwencja</span>
+              <strong id="turnout">—</strong>
+            </div>
+            <div>
+              <span>Obwody</span>
+              <strong id="reporting">0 / 454</strong>
+            </div>
+            <div>
+              <span>Ważne głosy</span>
+              <strong id="valid">—</strong>
+            </div>
+          </section>
+          <div class="count-line" id="progress" aria-label="Postęp liczenia">
+            <span id="progress-status">Oczekiwanie</span>
+            <span id="progress-precincts">—</span>
+            <span id="progress-ballots" hidden>—</span>
+            <span id="progress-valid" hidden>—</span>
+            <div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
+          </div>
+          <ol class="candidates" id="candidates"></ol>
+          <p class="rule">
+            Wygrywa kandydat, który otrzyma więcej ważnych głosów.
+          </p>
+          <p class="sources">
+            454 komisje PKW, numery 1–454. Podkład OpenFreeMap, lokale MSIP Kraków.
+          </p>
+        </div>
+        <div id="place-view" hidden></div>
+      </aside>
+      <div class="stage">
+        <main id="map" aria-label="Mapa Krakowa"></main>
+        <div class="map-tools">
+          <div class="map-switch" role="group" aria-label="Widok mapy">
+            <button type="button" id="mode-precincts" aria-pressed="true">Obwody</button>
+            <button type="button" id="mode-districts" aria-pressed="false">Dzielnice</button>
+          </div>
+          <div id="map-legend" class="map-legend" aria-label="Kolory na mapie"></div>
+          <div id="district-menu" class="district-menu" hidden>
+            <button type="button" data-district="">Całe miasto</button>
+            <div id="district-list"></div>
+          </div>
+        </div>
+        <div id="pkw-wait" class="pkw-chip" data-state="awaiting" role="status" aria-live="polite" style="--share: 0">
+          <span class="pkw-mark" aria-hidden="true"></span>
+          <span class="pkw-copy">
+            <strong id="pkw-title">Czekamy na wyniki PKW</strong>
+            <span id="pkw-detail">0 z 454 obwodów</span>
+            <span class="pkw-track" aria-hidden="true"><span></span></span>
+          </span>
+        </div>
+        <section id="runoff" class="runoff" hidden aria-live="polite">
+          <p class="runoff-kicker" id="runoff-kicker"></p>
+          <h2 id="runoff-title">Wynik</h2>
+          <p class="runoff-when" id="runoff-when"></p>
+          <ol class="runoff-places" id="runoff-places"></ol>
+        </section>
+      </div>
+    </div>
+    <div id="confetti" class="confetti" aria-hidden="true"></div>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.0/leaflet-maplibre-gl.js"></script>
+    <script src="js/map.js"></script>
+  </body>
+</html>
