@@ -25,18 +25,25 @@ init().catch((error) => {
   console.error(error);
 });
 
-countVisit();
+// Visits are counted in two periods: until the polls close (Sunday 21:00)
+// and after. Each period has two counters: every page load ("wejscia") and
+// distinct browsers ("osoby", once per browser per period). Read them with
+// scripts/visits.mjs. The times are defined further down (POLLS_CLOSE_AT).
+const VISIT_BASE = "https://abacus.jasoncameron.dev/hit/terra-cracovianum.github.io/krakow-2-tura";
 
 function countVisit() {
   const host = location.hostname;
   if (host === "localhost" || host === "127.0.0.1") return;
-  const seen = "krakow-wybory-2-tura-visit";
+  const period = Date.now() < POLLS_CLOSE_AT ? "przed" : "po";
+  const hit = (key) => fetch(`${VISIT_BASE}-${period}-${key}`, { cache: "no-store" });
+  hit("wejscia").catch(() => {});
+  const seen = `krakow-2-tura-osoba-${period}`;
   try {
     if (localStorage.getItem(seen)) return;
   } catch {
     return;
   }
-  fetch("https://abacus.jasoncameron.dev/hit/terra-cracovianum.github.io/krakow-wybory-2-tura-visits", { cache: "no-store" })
+  hit("osoby")
     .then((response) => {
       if (!response.ok) return;
       try {
@@ -49,12 +56,13 @@ function countVisit() {
 }
 
 async function init() {
-  const [candidateFile, results, precincts, stations, districts] = await Promise.all([
+  const [candidateFile, results, precincts, stations, districts, eligibleFile] = await Promise.all([
     fetch("data/candidates.json").then((response) => response.json()),
     fetch("data/results.json", { cache: "no-store" }).then((response) => response.json()),
     fetch("data/precincts.geojson").then((response) => response.json()),
     fetch("data/stations.geojson").then((response) => response.json()),
     fetch("data/districts.geojson").then((response) => response.json()),
+    fetch("data/eligible-round1.json").then((response) => response.json()).catch(() => ({ eligible: {} })),
   ]);
 
   state.candidates = candidateFile.candidates;
@@ -62,6 +70,7 @@ async function init() {
   state.stations = stations;
   state.precinctFeatures = precincts;
   state.districts = districts;
+  state.eligibleRound1 = eligibleFile.eligible || {};
 
   readPalette();
   placeRace();
@@ -182,6 +191,8 @@ async function init() {
   });
   bindSheet();
   watchLayout();
+  countVisit();
+  startPolling();
   const scheme = window.matchMedia("(prefers-color-scheme: dark)");
   const repaint = () => {
     readPalette();
@@ -1347,6 +1358,7 @@ function renderSummary() {
   renderPkwChip();
   renderRunoff();
   renderRace();
+  renderDecided();
   startCountdown();
 }
 
@@ -1624,8 +1636,10 @@ function renderRace() {
         <span class="race-figure">${figure}</span>
       </div>`;
   };
+  const decided = decidedWinner(results);
   let middle;
   if (winner) middle = `<b style="color:${winner.color}">Wygrywa ${escapeHtml(winner.short)}</b>`;
+  else if (decided) middle = `<b class="race-decided" style="color:${decided.winner.color}">Rozstrzygnięte · ${escapeHtml(decided.winner.short)}</b>`;
   else if (complete) middle = "<b>Remis</b>";
   else if (counted) middle = "<b>50%</b> wygrywa";
   else middle = "Kto pierwszy przekroczy <b>50%</b>?";
@@ -1656,6 +1670,11 @@ function renderRace() {
       </div>`
     : "";
 
+  // Remember what is on screen, so a new count glides on from there.
+  const before = {
+    bars: [...box.querySelectorAll(".race-bar")].map((bar) => parseFloat(bar.style.width) || 0),
+    counts: [...box.querySelectorAll("[data-count]")].map((node) => Number(node.dataset.shown) || 0),
+  };
   box.classList.toggle("is-complete", complete);
   box.classList.remove("is-crossed");
   if (winner) box.style.setProperty("--win", winner.color);
@@ -1667,25 +1686,32 @@ function renderRace() {
     </div>
     ${past}
     <p class="race-foot">${foot}</p>`;
-  animateRace(box, Boolean(winner));
+  animateRace(box, Boolean(winner || decided), before);
 }
 
 // Fill in from both edges toward the middle, counting the numbers up with
 // the bars. The main race goes first; the first-round bar follows.
-function animateRace(box, crowned) {
+function animateRace(box, crowned, before = { bars: [], counts: [] }) {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const groups = [
     { root: box.querySelector(".race-track.is-main"), extra: box.querySelectorAll(".race-head [data-count]"), delay: 150, duration: 1700 },
     { root: box.querySelector(".race-past"), extra: [], delay: 650, duration: 1300 },
   ].filter((group) => group.root);
   const ease = (t) => 1 - Math.pow(1 - t, 4);
+  const allBars = [...box.querySelectorAll(".race-bar")];
+  const allCounts = [...box.querySelectorAll("[data-count]")];
+  const fromBar = (bar) => before.bars[allBars.indexOf(bar)] || 0;
+  const fromCount = (node) => before.counts[allCounts.indexOf(node)] || 0;
   const paint = (group, amount) => {
     group.root.querySelectorAll(".race-bar").forEach((bar) => {
-      bar.style.width = `${Number(bar.dataset.width) * amount}%`;
+      const from = fromBar(bar);
+      bar.style.width = `${from + (Number(bar.dataset.width) - from) * amount}%`;
     });
     [...group.root.querySelectorAll("[data-count]"), ...group.extra].forEach((node) => {
       const target = Number(node.dataset.count);
-      const value = target * amount;
+      const from = fromCount(node);
+      const value = from + (target - from) * amount;
+      node.dataset.shown = String(value);
       if (node.dataset.kind === "share") node.textContent = formatPercent(value);
       else {
         const whole = Math.round(value);
@@ -1712,6 +1738,101 @@ function animateRace(box, crowned) {
     else crown();
   };
   requestAnimationFrame(step);
+}
+
+// A winner is decided before the full count when the lead is larger than
+// every vote still possible in the commissions not counted yet. The ceiling
+// for a commission is its eligible voters (from PKW, or the first round
+// when PKW has not published it yet) with room to spare: +10% and 50 more
+// for voters added on the day with a certificate, and twice the number plus
+// 50 in hospitals, care homes and prisons, whose lists change from day to
+// day. Only PKW numbers go in; nothing is estimated.
+function voteCeiling(nr, eligible) {
+  const special = !precinctShapeFeature(nr);
+  return special ? eligible * 2 + 50 : Math.ceil(eligible * 1.1) + 50;
+}
+
+function decidedWinner(results) {
+  if (!results || results.sample) return null;
+  const total = results.precinctsTotal || 0;
+  const reported = results.precinctsReporting || 0;
+  if (!(reported > 0) || reported >= total) return null;
+  const [first, second] = state.candidates;
+  const a = results.candidates && results.candidates[first.id];
+  const b = results.candidates && results.candidates[second.id];
+  if (typeof a !== "number" || typeof b !== "number" || a === b) return null;
+  let remaining = 0;
+  let open = 0;
+  for (let nr = 1; nr <= total; nr += 1) {
+    const row = results.precincts[String(nr)];
+    if (row && row.reported) continue;
+    const eligible = row && typeof row.eligible === "number" ? row.eligible : state.eligibleRound1[String(nr)];
+    if (typeof eligible !== "number") return null;
+    remaining += voteCeiling(nr, eligible);
+    open += 1;
+  }
+  const lead = Math.abs(a - b);
+  if (lead <= remaining) return null;
+  return { winner: a > b ? first : second, lead, remaining, open };
+}
+
+function renderDecided() {
+  const box = document.querySelector("#decided");
+  if (!box) return;
+  const decided = decidedWinner(state.results);
+  box.hidden = !decided;
+  if (!decided) return;
+  const { winner, lead, remaining, open } = decided;
+  box.style.setProperty("--c", winner.color);
+  box.innerHTML = `<span class="decided-mark" aria-hidden="true">
+      <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+    <span class="decided-copy">
+      <small>Zwycięzca rozstrzygnięty</small>
+      <strong>${escapeHtml(winner.name)}</strong>
+      <span>Przewaga ${formatCount(lead)} ${voteNoun(lead)} jest większa niż wszystkie głosy możliwe jeszcze w ${formatCount(open)} ${open === 1 ? "niepoliczonym obwodzie" : "niepoliczonych obwodach"} (najwyżej ${formatCount(remaining)}).</span>
+    </span>`;
+  celebrateCount([{ candidate: winner }]);
+}
+
+// Results arrive by republishing data/results.json. Check every 30 seconds
+// (and when the tab comes back) and redraw only when the count changed.
+const POLL_MS = 30000;
+
+function startPolling() {
+  window.setInterval(refreshResults, POLL_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshResults();
+  });
+}
+
+async function refreshResults() {
+  if (document.hidden || !state.map) return;
+  let next;
+  try {
+    const response = await fetch("data/results.json", { cache: "no-store" });
+    if (!response.ok) return;
+    next = await response.json();
+  } catch {
+    return;
+  }
+  const prev = state.results;
+  if (next.updatedAt === prev.updatedAt && next.precinctsReporting === prev.precinctsReporting) return;
+  state.results = next;
+  renderSummary();
+  renderCandidates();
+  paintPrecincts();
+  paintDistricts();
+  renderLegend();
+  renderDistrictMenu();
+  const place = document.querySelector("#place-view");
+  if (!place.hidden) {
+    const scroll = place.scrollTop;
+    if (state.focusFeature) place.innerHTML = stationPopup(state.focusFeature, state.highlightNr);
+    else if (state.district) place.innerHTML = districtSheet(state.districts.features.find((item) => item.properties.dzielnica === state.district));
+    bindPlaceActions(place);
+    place.scrollTop = scroll;
+  }
 }
 
 function displayName(candidate) {
