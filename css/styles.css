@@ -1317,10 +1317,7 @@ html.has-ticker .status::before { background: var(--live); }
   cursor: pointer;
 }
 
-/* ---------- PKW status pill ---------- */
-
-/* Progress is shown once, in the panel header; the map stays clean. */
-.pkw-chip { display: none !important; }
+/* ---------- PKW progress card (top right of the map) ---------- */
 
 .pkw-chip {
   position: absolute;
@@ -1328,11 +1325,12 @@ html.has-ticker .status::before { background: var(--live); }
   right: 16px;
   z-index: 500;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
+  width: 240px;
   max-width: calc(100% - 32px);
-  padding: 8px 14px 8px 12px;
-  border-radius: 999px;
+  padding: 14px 16px 16px;
+  border-radius: 18px;
   background: var(--glass);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
@@ -1342,10 +1340,10 @@ html.has-ticker .status::before { background: var(--live); }
 }
 
 .pkw-mark {
-  position: relative;
   flex: none;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
   border-radius: 50%;
   background: var(--muted);
 }
@@ -1354,39 +1352,68 @@ html.has-ticker .status::before { background: var(--live); }
 .pkw-chip[data-state="sample"] .pkw-mark { animation: pkw-wait 2s ease-out infinite; }
 
 .pkw-chip[data-state="partial"] .pkw-mark {
-  width: 18px;
-  height: 18px;
-  background:
-    radial-gradient(circle at center, var(--surface) 0 5px, transparent 5.5px),
-    conic-gradient(from -90deg, var(--live) calc(var(--share) * 1%), var(--fill-strong) 0);
+  background: var(--live);
+  animation: pkw-live 2s ease-out infinite;
 }
 
-.pkw-chip[data-state="full"] .pkw-mark { background: var(--live); }
+.pkw-chip[data-state="full"] .pkw-mark { background: var(--ink); }
 
 .pkw-copy {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex: 1;
+  flex-direction: column;
   min-width: 0;
-  white-space: nowrap;
 }
 
 .pkw-copy strong {
-  font-size: 0.85rem;
+  color: var(--muted);
+  font-size: 0.78rem;
   font-weight: 600;
 }
 
 #pkw-detail {
-  display: inline-flex;
-  gap: 6px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 2px;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
 }
 
-#pkw-detail b { color: var(--ink); font-weight: 600; }
+#pkw-detail b {
+  color: var(--ink);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
 
-.pkw-track { display: none; }
+.pkw-track {
+  display: block;
+  height: 4px;
+  margin-top: 10px;
+  border-radius: 99px;
+  background: var(--fill);
+  overflow: hidden;
+}
+
+.pkw-track span {
+  display: block;
+  height: 100%;
+  width: calc(var(--share, 0) * 1%);
+  border-radius: inherit;
+  background: var(--live);
+  transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pkw-chip[data-state="full"] .pkw-track span { background: var(--ink); }
+
+.pkw-chip[data-state="awaiting"] .pkw-track span,
+.pkw-chip[data-state="sample"] .pkw-track span {
+  width: 28%;
+  background: var(--fill-strong);
+  animation: pkw-glide 2.2s ease-in-out infinite;
+}
 
 @keyframes pkw-wait {
   0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--muted) 45%, transparent); }
@@ -1394,7 +1421,22 @@ html.has-ticker .status::before { background: var(--live); }
   100% { box-shadow: 0 0 0 0 transparent; }
 }
 
+@keyframes pkw-live {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--live) 50%, transparent); }
+  70% { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@keyframes pkw-glide {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(380%); }
+}
+
 /* ---------- Winner card ---------- */
+
+/* The race under the map now names the winner, so this card stays hidden;
+   renderRunoff still drives the ticker and the confetti. */
+.runoff { display: none !important; }
 
 .runoff {
   position: absolute;
@@ -1577,8 +1619,8 @@ html.has-ticker .status::before { background: var(--live); }
   .runoff,
   .ticker-track,
   .status.is-flowing::before,
-  .pkw-chip[data-state="awaiting"] .pkw-mark,
-  .pkw-chip[data-state="sample"] .pkw-mark { animation: none; }
+  .pkw-chip .pkw-mark,
+  .pkw-chip .pkw-track span { animation: none; transition: none; }
   .confetti-piece { display: none; }
   .panel,
   .split span,

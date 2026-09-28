@@ -1260,7 +1260,7 @@ function renderPkwChip() {
     return;
   }
   chip.dataset.state = "full";
-  title.textContent = results.round === 2 ? "Wyniki drugiej tury" : "Wyniki pełne";
+  title.textContent = "Wyniki pełne";
   detail.innerHTML = countedShare;
 }
 

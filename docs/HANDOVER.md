@@ -171,7 +171,7 @@ Search (`#query`) matches a station’s precinct numbers, building name, street,
 
 The phone layout starts at `max-width: 860px`. The map is on top and the column becomes a bottom sheet with three heights, set by `data-detent` on `.panel`: `peek` (the title and the duel), `half` (50dvh) and `full` (88dvh). Drag the handle to resize, or tap it to step through the heights (`bindSheet`). `settleSheet` refits the map after the sheet moves. Opening a station or district from `peek` raises the sheet to `half`. When the count is finished, the runoff card collapses to a strip.
 
-Progress is shown once, in the header status line. `#pkw-wait` and `.count-line` are still filled by the script, but they are hidden.
+On a computer, the top right of the map has the progress card `#pkw-wait` (`renderPkwChip`): “Czekamy na wyniki PKW”, then “Wyniki spływają” with the share of commissions counted in large type and “246 z 454 obwodów”, then “Wyniki pełne · 100%”, with a thin progress bar. It is hidden on phones, where the header status line shows the same. `.count-line` is kept for screen readers only. The winner card `#runoff` is hidden, because the race under the map names the winner; `renderRunoff` still drives the ticker and the confetti.
 
 ## Finished count, confetti, visits
 
