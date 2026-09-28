@@ -194,7 +194,7 @@ async function init() {
     if (state.view === "districts") {
       const menu = document.querySelector("#district-menu");
       menu.hidden = !menu.hidden;
-      if (state.district) fitDistrict(state.district, true);
+      if (state.district) fitDistrict(state.district, "pan");
       else fitCity(true);
       return;
     }
@@ -209,6 +209,13 @@ async function init() {
   fadeBasemap();
   const refitSoon = () => {
     if (settling) return;
+    // Let a camera move finish; a resize that lands mid-flight refits after.
+    const wait = cameraBusyUntil - performance.now();
+    if (wait > 0) {
+      window.clearTimeout(refitLater);
+      refitLater = window.setTimeout(refitSoon, wait + 20);
+      return;
+    }
     map.invalidateSize({ animate: false, pan: false });
     if (placeIsOpen() && state.focusFeature) fitPrecinct(false);
     else if (state.view === "districts" && state.district) fitDistrict(state.district, false);
@@ -595,9 +602,7 @@ const ResetControl = L.Control.extend({
       if (placeIsOpen()) closeSheet();
       else if (state.district) selectDistrict("");
       else {
-        state.map.stop();
-        state.map.setZoom(state.map.getMinZoom(), { animate: false });
-        fitCity();
+        fitCity(true, "fly");
       }
     });
     return box;
@@ -684,10 +689,11 @@ function setMapView(view) {
   paintDistricts();
   renderLegend();
   renderDistrictMenu();
-  fitCity(true);
+  fitCity(true, "fly");
 }
 
 function selectDistrict(key) {
+  const switching = Boolean(state.district) && placeIsOpen();
   state.district = key || null;
   state.highlightNr = null;
   paintDistricts();
@@ -695,14 +701,15 @@ function selectDistrict(key) {
   document.querySelector("#district-menu").hidden = true;
   if (!state.district) {
     if (placeIsOpen()) closeSheet();
-    else fitCity(true);
+    else fitCity(true, "fly");
     return;
   }
   showDistrict(state.district);
-  fitDistrict(state.district, true);
+  fitDistrict(state.district, switching ? "pan" : "fly");
 }
 
-function fitDistrict(key, animate) {
+// `how` is "fly", "pan" or false (jump); true means fly.
+function fitDistrict(key, how) {
   const map = state.map;
   if (!map || !state.districtLayer) return;
   let target = null;
@@ -711,12 +718,12 @@ function fitDistrict(key, animate) {
   });
   if (!target) return;
   const pad = viewPadding();
-  map.fitBounds(withSurroundings(target.getBounds(), 0.42), {
-    paddingTopLeft: L.point(pad.paddingTopLeft.x + 12, 36),
+  const mode = how === false || !motionAllowed() ? "jump" : how === "pan" ? "pan" : "fly";
+  if (map._loaded) map.stop();
+  moveCamera(withSurroundings(target.getBounds(), 0.42), {
+    paddingTopLeft: L.point(pad.paddingTopLeft.x + 12, Math.max(36, pad.paddingTopLeft.y)),
     paddingBottomRight: pad.paddingBottomRight.add([24, 36]),
-    animate: animate !== false,
-    maxZoom: 14,
-  });
+  }, mode, 14);
 }
 
 function syncModeButtons() {
@@ -840,7 +847,9 @@ function viewPadding() {
 
 // `force` refits even when the city is already in view, e.g. when the
 // district list opens or closes and the free space changes.
-function fitCity(force) {
+// `force` refits even when the city is already in view; `how` "fly" arcs
+// out to the whole city instead of gliding.
+function fitCity(force, how) {
   const map = state.map;
   if (!map || fitting === "city") return;
   if (map._loaded) {
@@ -863,8 +872,12 @@ function fitCity(force) {
   const zoom = map._loaded ? map.getZoom() : null;
   if (!force && zoom != null && map.getBounds().contains(frame) && zoom <= fitted + 0.01) return;
   fitting = "city";
-  const glide = Boolean(force) && map._loaded && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  map.fitBounds(frame, { ...pad, animate: glide, duration: 0.45 });
+  const moving = Boolean(force) && map._loaded && motionAllowed();
+  if (moving && how === "fly") {
+    holdCamera(FLY.duration);
+    map.flyToBounds(frame, { ...pad, ...FLY });
+  }
+  else map.fitBounds(frame, { ...pad, animate: moving, duration: 0.45 });
   fitting = false;
 }
 
@@ -923,14 +936,54 @@ function focusPadding() {
   };
 }
 
+// Camera moves, in the spirit of Apple Maps: "fly" arcs in or out,
+// "pan" slides at the current scale, "jump" moves at once (resizing,
+// rotating, or when the reader asked for reduced motion).
+const FLY = { duration: 0.9, easeLinearity: 0.2 };
+const HOP = { duration: 0.6, easeLinearity: 0.25 };
+const PAN = { duration: 0.55, easeLinearity: 0.25 };
+let cameraBusyUntil = 0;
+let refitLater = 0;
+
+function holdCamera(seconds) {
+  cameraBusyUntil = performance.now() + seconds * 1000 + 150;
+}
+
+function motionAllowed() {
+  return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function moveCamera(bounds, options, mode, maxZoom) {
+  const map = state.map;
+  const loaded = Boolean(map._loaded);
+  if (mode === "fly" && loaded) {
+    holdCamera(FLY.duration);
+    map.flyToBounds(bounds, { ...options, maxZoom, ...FLY });
+  } else if (mode === "pan" && loaded) {
+    const padding = options.paddingTopLeft.add(options.paddingBottomRight);
+    const fits = map.getBoundsZoom(bounds, false, padding) >= map.getZoom() - 0.05;
+    if (fits) {
+      // Same scale, just slide across.
+      holdCamera(PAN.duration);
+      map.fitBounds(bounds, { ...options, maxZoom: Math.min(maxZoom, map.getZoom()), animate: true, ...PAN });
+    } else {
+      // A larger area: a short, gentle hop out instead of a snap.
+      holdCamera(HOP.duration);
+      map.flyToBounds(bounds, { ...options, maxZoom, ...HOP });
+    }
+  } else {
+    map.fitBounds(bounds, { ...options, maxZoom, animate: false });
+  }
+}
+
 function fitPrecinct(animate) {
   const map = state.map;
   const bounds = focusView();
   if (!map || !bounds) return;
   const size = map.getSize();
   if (size.x < 40 || size.y < 40) return;
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const motion = animate !== false && !reduce;
+  const motion = animate !== false && motionAllowed();
+  const mode = motion ? state.focusMode || "fly" : "jump";
   if (map._loaded) map.stop();
   if (focusDone) map.off("moveend", focusDone);
   let settled = false;
@@ -947,8 +1000,8 @@ function fitPrecinct(animate) {
   focusDone = done;
   fitting = true;
   map.once("moveend", done);
-  timer = window.setTimeout(done, motion ? 900 : 50);
-  map.fitBounds(withSurroundings(bounds, 0.42), { ...focusPadding(), maxZoom: 15, animate: motion, duration: 0.6 });
+  timer = window.setTimeout(done, mode === "fly" ? 1200 : mode === "pan" ? 800 : 50);
+  moveCamera(withSurroundings(bounds, 0.42), focusPadding(), mode, 15);
 }
 
 function resizeBasemap(layer) {
@@ -978,12 +1031,14 @@ function glideCity() {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const panel = document.querySelector(".panel");
   const apply = () => {
-    settling = false;
+    // Resize first while still settling, so the resize event it fires
+    // does not snap the view before the animated move below starts.
     map.invalidateSize({ animate: false, pan: false });
+    settling = false;
     if (placeIsOpen() && state.focusFeature) fitPrecinct(true);
-    else if (state.view === "districts" && state.district) fitDistrict(state.district, true);
+    else if (state.view === "districts" && state.district) fitDistrict(state.district, "fly");
     else {
-      fitCity();
+      fitCity(true, "fly");
       syncBasemap();
     }
   };
@@ -1024,6 +1079,9 @@ function glideCity() {
 
 function openStation(index, nr) {
   hideHoverCard();
+  // Coming from the whole city the camera flies in; switching from one
+  // open station to another only slides across (see fitPrecinct).
+  state.focusMode = placeIsOpen() && state.focusFeature ? "pan" : "fly";
   state.highlightNr = nr ? String(nr) : null;
   paintPrecincts();
   showPlace(state.stations.features[index], state.highlightNr);
@@ -1123,13 +1181,19 @@ function bindSheet() {
 function settleSheet() {
   settling = true;
   window.setTimeout(() => {
-    settling = false;
     const map = state.map;
-    if (!map) return;
+    if (!map) {
+      settling = false;
+      return;
+    }
     map.invalidateSize({ animate: false, pan: false });
-    if (placeIsOpen() && state.focusFeature) fitPrecinct(true);
-    else if (state.view === "districts" && state.district) fitDistrict(state.district, true);
-    else fitCity();
+    settling = false;
+    // The sheet only changed height: slide, don't fly.
+    if (placeIsOpen() && state.focusFeature) {
+      state.focusMode = "pan";
+      fitPrecinct(true);
+    } else if (state.view === "districts" && state.district) fitDistrict(state.district, "pan");
+    else fitCity(true);
     syncBasemap();
   }, 360);
 }
