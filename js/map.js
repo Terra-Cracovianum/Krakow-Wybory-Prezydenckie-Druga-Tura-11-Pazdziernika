@@ -51,7 +51,7 @@ function countVisit() {
 async function init() {
   const [candidateFile, results, precincts, stations, districts] = await Promise.all([
     fetch("data/candidates.json").then((response) => response.json()),
-    fetch("data/results.json").then((response) => response.json()),
+    fetch("data/results.json", { cache: "no-store" }).then((response) => response.json()),
     fetch("data/precincts.geojson").then((response) => response.json()),
     fetch("data/stations.geojson").then((response) => response.json()),
     fetch("data/districts.geojson").then((response) => response.json()),

@@ -183,6 +183,10 @@ On a computer, the top right of the map has the progress card `#pkw-wait` (`rend
 
 `countVisit` skips `localhost` and `127.0.0.1`. Otherwise it hits `https://abacus.jasoncameron.dev/hit/terra-cracovianum.github.io/krakow-wybory-2-tura-visits` once per browser, remembered in `localStorage` key `krakow-wybory-2-tura-visit`. The public read URL is `https://abacus.jasoncameron.dev/get/terra-cracovianum.github.io/krakow-wybory-2-tura-visits`. Both sites are served from `terra-cracovianum.github.io`, so they share browser storage; that is why every key has `2-tura` in it. Do not put an admin key in the repository or in this document.
 
+## Caching
+
+`index.html` loads `css/styles.css?v=…` and `js/map.js?v=…`. GitHub Pages lets browsers keep files for 10 minutes, and phones do, so bump that version string whenever the CSS or JS changes, or visitors may see the old layout. `results.json` is fetched with `cache: "no-store"` so a reload always shows the newest count.
+
 ## Link preview
 
 `og:image` and `twitter:image` point at `druga-tura-2.jpg` on the published host. The file is a baseline JPEG, 1200×630. X dropped the picture when an earlier image URL had a query string, and it kept showing an older card until the image path itself changed. Replace the file by publishing a new filename and updating both tags. Do not add `?v=`.
