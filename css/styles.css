@@ -816,6 +816,11 @@ html.has-ticker .status::before { background: var(--live); }
 
 .leaflet-overlay-pane { transition: opacity 0.35s ease; }
 
+/* The selected precinct or district gets a halo in the page colour. */
+.leaflet-overlay-pane path.is-selected {
+  filter: drop-shadow(0 0 1.5px var(--map-bg)) drop-shadow(0 0 1px var(--map-bg));
+}
+
 /* The city rests on the page with a soft shadow instead of a dark outline. */
 .leaflet-overlay-pane svg { filter: var(--map-lift); }
 

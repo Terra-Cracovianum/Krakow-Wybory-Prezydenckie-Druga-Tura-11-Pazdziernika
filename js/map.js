@@ -102,7 +102,9 @@ async function init() {
       const nr = feature.properties.nr;
       layer.on({
         mouseover(event) {
-          if (!state.highlightNr) setHover(event.target, hoverPrecinct(feature), () => precinctLayer.resetStyle(event.target));
+          if (String(nr) !== String(state.highlightNr)) {
+            setHover(event.target, hoverPrecinct(feature), () => precinctLayer.resetStyle(event.target));
+          }
           showHoverCard(event, precinctCard(nr), `p${nr}`);
         },
         mousemove(event) {
@@ -137,7 +139,9 @@ async function init() {
     onEachFeature(feature, layer) {
       layer.on({
         mouseover(event) {
-          if (!state.district) setHover(event.target, hoverDistrict(feature), () => districtLayer.resetStyle(event.target));
+          if (feature.properties.dzielnica !== state.district) {
+            setHover(event.target, hoverDistrict(feature), () => districtLayer.resetStyle(event.target));
+          }
           showHoverCard(event, districtCard(feature), `d${feature.properties.dzielnica}`);
         },
         mousemove(event) {
@@ -330,7 +334,7 @@ function areaStyle(fill, selected, dim, kind) {
   const district = kind === "district";
   return {
     color: selected ? palette.selected : palette.line,
-    weight: selected ? 2 : district ? palette.gap : palette.hair,
+    weight: selected ? 2.6 : district ? palette.gap : palette.hair,
     opacity: 1,
     fillColor: fill || palette.empty,
     fillOpacity: dim ? 0.4 : 1,
@@ -338,12 +342,23 @@ function areaStyle(fill, selected, dim, kind) {
   };
 }
 
+// Two looks: the selected area has a thick outline with a halo; an area
+// under the pointer while something is selected is only a preview, full
+// colour again with a thin, softer outline.
+const PREVIEW = { opacity: 0.55, weight: 1.4, fillOpacity: 1 };
+
 function hoverPrecinct(feature) {
-  return { ...stylePrecinct(feature), color: palette.selected, weight: 1.6 };
+  const base = { ...stylePrecinct(feature), color: palette.selected };
+  return state.highlightNr ? { ...base, ...PREVIEW } : { ...base, weight: 1.6 };
 }
 
 function hoverDistrict(feature) {
-  return { ...styleDistrict(feature), color: palette.selected, weight: 2.2 };
+  const base = { ...styleDistrict(feature), color: palette.selected };
+  return state.district ? { ...base, ...PREVIEW, weight: 1.8 } : { ...base, weight: 2.2 };
+}
+
+function markSelected(shape, selected) {
+  if (shape._path) shape._path.classList.toggle("is-selected", selected);
 }
 
 // Only one area is outlined at a time. Browsers sometimes skip "mouseout"
@@ -356,6 +371,9 @@ function setHover(layer, style, reset) {
   hovered = { layer, reset };
   layer.setStyle(style);
   layer.bringToFront();
+  // The selected area always stays above a preview.
+  bringSelectedToFront();
+  bringSelectedDistrictToFront();
 }
 
 function clearHover(layer) {
@@ -396,7 +414,10 @@ function specialDots() {
     dot.nr = nr;
     dot.on({
       mouseover(event) {
-        setHover(event.target, { color: palette.selected, weight: 2 }, () => event.target.setStyle(dotStyle(nr)));
+        if (String(nr) !== String(state.highlightNr)) {
+          const look = state.highlightNr ? { color: palette.selected, ...PREVIEW } : { color: palette.selected, weight: 2 };
+          setHover(event.target, look, () => event.target.setStyle(dotStyle(nr)));
+        }
         showHoverCard(event, precinctCard(nr), `p${nr}`);
       },
       mousemove(event) {
@@ -588,7 +609,9 @@ function paintDistricts() {
   if (!layer) return;
   layer.eachLayer((shape) => {
     layer.resetStyle(shape);
-    if (shape.feature.properties.dzielnica === state.district) shape.bringToFront();
+    const selected = shape.feature.properties.dzielnica === state.district;
+    markSelected(shape, selected);
+    if (selected) shape.bringToFront();
   });
 }
 
@@ -735,7 +758,9 @@ function paintPrecincts() {
   if (state.borderLayer) state.borderLayer.setStyle(borderStyle());
   bringBordersToFront();
   layer.eachLayer((shape) => {
-    if (String(shape.feature.properties.nr) === String(state.highlightNr)) shape.bringToFront();
+    const selected = String(shape.feature.properties.nr) === String(state.highlightNr);
+    markSelected(shape, selected);
+    if (selected) shape.bringToFront();
   });
   paintDots();
 }
