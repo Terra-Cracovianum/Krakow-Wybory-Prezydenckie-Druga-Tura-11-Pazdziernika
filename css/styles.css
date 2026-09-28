@@ -621,29 +621,6 @@ html.has-ticker .status::before { background: var(--live); }
   font-size: 0.95rem;
 }
 
-.obwod-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0 0 18px;
-}
-
-.obwod-chip {
-  min-width: 36px;
-  min-height: 30px;
-  padding: 4px 10px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--fill);
-  color: var(--ink);
-  font-size: 0.82rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-}
-
-.obwod-chip:hover { background: var(--fill-strong); }
-
 #place-view .totals { margin-bottom: 18px; }
 
 .popup-blocks {

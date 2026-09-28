@@ -1076,15 +1076,6 @@ function bindPlaceActions(place) {
   place.querySelectorAll("[data-close]").forEach((button) => {
     button.addEventListener("click", closeSheet);
   });
-  place.querySelectorAll("[data-obwod]").forEach((button) => {
-    button.addEventListener("click", () => openListedPrecinct(button.dataset.obwod));
-  });
-}
-
-function openListedPrecinct(nr) {
-  showPrecinctMap();
-  const index = stationIndexFor(nr);
-  if (index >= 0) openStation(index, nr);
 }
 
 function showPrecinctMap() {
@@ -1511,9 +1502,6 @@ function districtSheet(feature) {
   const total = placeTotals(numbers);
   const roman = feature.properties.dzielnica.replace("Dzielnica ", "");
   const title = DISTRICT_TITLE[feature.properties.dzielnica] || feature.properties.dzielnica;
-  const chips = numbers
-    .map((nr) => `<button type="button" class="obwod-chip" data-obwod="${escapeHtml(nr)}">${escapeHtml(nr)}</button>`)
-    .join("");
   const counted = `<b>${numberFormat.format(total.reportedCount)}</b><em> / ${numberFormat.format(numbers.length)}</em>`;
   return `<div class="place-toolbar">
       <button type="button" class="place-back" data-close>
@@ -1529,7 +1517,6 @@ function districtSheet(feature) {
       <h3>${escapeHtml(title)}</h3>
       <p class="place">${numberFormat.format(numbers.length)} ${obwodNoun(numbers.length)}</p>
     </header>
-    <div class="obwod-chips" aria-label="Obwody dzielnicy">${chips}</div>
     <section class="totals" aria-label="Wynik dzielnicy">
       <div><span>Frekwencja</span><strong>${turnoutOf(total)}</strong></div>
       <div><span>Obwody</span><strong>${counted}</strong></div>

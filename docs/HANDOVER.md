@@ -159,7 +159,7 @@ Clicking a district calls `selectDistrict`. The sheet is `showDistrict`: it fill
 
 The city view and the district sheet share `duelMarkup`: two percentages facing each other, one split bar with a tick at 50%, and the lead in points (“Gibała +4,92 pkt przewagi”). Before any result, the city view shows the first-round share from `firstRound` in `candidates.json`.
 
-The district sheet shows the roman number and the official name, a sentence with the precinct count, a chip per precinct, turnout, counted precincts, valid votes, and the duel. A chip calls `openListedPrecinct`, which leaves district view, shows the precinct layer, and opens the station table via `showPlace`.
+The district sheet shows the roman number and the official name, a sentence with the precinct count, turnout, counted precincts, valid votes, and the duel. It does not list the precinct numbers: a reader who wants a single precinct switches to Obwody.
 
 “Miasto” (`data-close`) and “Całe miasto” (`data-district=""`) call `closeSheet`. That clears the highlight, clears `state.district`, and fits the city again.
 
