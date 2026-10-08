@@ -1199,10 +1199,15 @@ html.has-ticker .status::before { background: var(--live); }
 
 .race-middle b { color: var(--ink); font-weight: 700; }
 
+.race-bars {
+  position: relative;
+  margin: 10px 0 8px;
+}
+
 .race-track {
   position: relative;
   height: 14px;
-  margin: 10px 0 8px;
+  overflow: hidden;
   border-radius: 7px;
   /* Hatched grey: the part of the vote that is not counted yet. */
   background:
@@ -1223,26 +1228,27 @@ html.has-ticker .status::before { background: var(--live); }
 
 .race-bar.is-right { right: 0; border-radius: 0 7px 7px 0; }
 
+/* One finish line for both bars, so the 50% mark is a single axis. */
 .race-line {
   position: absolute;
-  top: -6px;
-  bottom: -6px;
+  top: 0;
+  bottom: 0;
   left: 50%;
-  z-index: 1;
-  width: 2px;
-  margin-left: -1px;
+  z-index: 2;
+  width: 1.5px;
+  margin-left: -0.75px;
   border-radius: 1px;
-  background: var(--ink);
+  background: color-mix(in srgb, var(--ink) 72%, transparent);
+  pointer-events: none;
 }
 
-.race.is-crossed .race-track.is-main .race-line {
+.race.is-crossed .race-line {
   background: var(--win);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--win) 22%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--win) 22%, transparent);
   transition: background 0.4s ease, box-shadow 0.4s ease;
 }
 
-/* First round, thinner and quieter, as a reference under the race. It
-   spans the same width, so both 50% lines stand one above the other. */
+/* First round, thinner and quieter, under the same 50% axis. */
 .race-past { margin: 2px 0 14px; }
 
 .race-past-labels {
@@ -1268,7 +1274,7 @@ html.has-ticker .status::before { background: var(--live); }
 
 .race-track.is-past {
   height: 6px;
-  margin: 0;
+  margin-top: 8px;
   border-radius: 3px;
   background: var(--fill);
 }
@@ -1278,14 +1284,6 @@ html.has-ticker .status::before { background: var(--live); }
 .race-track.is-past .race-bar.is-left { border-radius: 3px 0 0 3px; }
 
 .race-track.is-past .race-bar.is-right { border-radius: 0 3px 3px 0; }
-
-.race-track.is-past .race-line {
-  top: -3px;
-  bottom: -3px;
-  width: 1px;
-  margin-left: -0.5px;
-  opacity: 0.45;
-}
 
 .race-foot {
   margin: 0;
@@ -1834,9 +1832,13 @@ html.is-compact .race-figure strong { font-size: 1.45rem; }
 
 html.is-compact .race-middle { margin-bottom: 3px; font-size: 0.72rem; }
 
-html.is-compact .race-track.is-main { height: 10px; margin: 8px 0 0; }
+html.is-compact .race-bars { margin: 8px 0 0; }
 
-html.is-compact .race-past { margin: 8px 0 0; }
+html.is-compact .race-track.is-main { height: 10px; }
+
+html.is-compact .race-track.is-past { margin-top: 6px; }
+
+html.is-compact .race-past { margin: 6px 0 0; }
 
 html.is-compact .race-past-labels { margin-top: 4px; }
 

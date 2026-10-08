@@ -1655,13 +1655,14 @@ function renderRace() {
   const pastA = first.firstRound ? first.firstRound.share : 0;
   const pastB = second.firstRound ? second.firstRound.share : 0;
   const others = Math.max(0, 100 - pastA - pastB);
+  const pastTrack = pastA || pastB
+    ? `<div class="race-track is-past" aria-hidden="true">
+        <span class="race-bar is-left" data-width="${pastA}" style="--c:${first.color}"></span>
+        <span class="race-bar is-right" data-width="${pastB}" style="--c:${second.color}"></span>
+      </div>`
+    : "";
   const past = pastA || pastB
     ? `<div class="race-past" aria-label="I tura, 27 września: ${escapeHtml(first.short)} ${formatPercent(pastA)}, ${escapeHtml(second.short)} ${formatPercent(pastB)}, pozostali ${formatPercent(others)}">
-        <div class="race-track is-past" aria-hidden="true">
-          <span class="race-bar is-left" data-width="${pastA}" style="--c:${first.color}"></span>
-          <span class="race-bar is-right" data-width="${pastB}" style="--c:${second.color}"></span>
-          <i class="race-line"></i>
-        </div>
         <p class="race-past-labels" aria-hidden="true">
           <span><b class="race-past-num" style="--c:${first.color}" data-count="${pastA}" data-kind="share">0,00%</b></span>
           <span class="race-past-tag">I tura, 27 września<span class="race-past-others"> · pozostali kandydaci ${formatPercent(others)}</span></span>
@@ -1679,10 +1680,13 @@ function renderRace() {
   box.classList.remove("is-crossed");
   if (winner) box.style.setProperty("--win", winner.color);
   box.innerHTML = `<div class="race-head">${side(first, a, "is-left")}<p class="race-middle">${middle}</p>${side(second, b, "is-right")}</div>
-    <div class="race-track is-main" aria-hidden="true">
-      <span class="race-bar is-left" data-width="${widthA}" style="--c:${first.color}"></span>
-      <span class="race-bar is-right" data-width="${widthB}" style="--c:${second.color}"></span>
-      <i class="race-line"></i>
+    <div class="race-bars">
+      <div class="race-track is-main" aria-hidden="true">
+        <span class="race-bar is-left" data-width="${widthA}" style="--c:${first.color}"></span>
+        <span class="race-bar is-right" data-width="${widthB}" style="--c:${second.color}"></span>
+      </div>
+      ${pastTrack}
+      <i class="race-line" aria-hidden="true"></i>
     </div>
     ${past}
     <p class="race-foot">${foot}</p>`;
@@ -1695,7 +1699,7 @@ function animateRace(box, crowned, before = { bars: [], counts: [] }) {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const groups = [
     { root: box.querySelector(".race-track.is-main"), extra: box.querySelectorAll(".race-head [data-count]"), delay: 150, duration: 1700 },
-    { root: box.querySelector(".race-past"), extra: [], delay: 650, duration: 1300 },
+    { root: box.querySelector(".race-track.is-past"), extra: box.querySelectorAll(".race-past [data-count]"), delay: 650, duration: 1300 },
   ].filter((group) => group.root);
   const ease = (t) => 1 - Math.pow(1 - t, 4);
   const allBars = [...box.querySelectorAll(".race-bar")];
