@@ -851,8 +851,8 @@ function viewPadding() {
   return {
     // On a compact screen the view switch sits on top of the map and the
     // legend strip at the bottom, so the city is framed between them.
-    paddingTopLeft: L.point(menuInset(mapEl) || 16, compactLayout() ? 54 : 16),
-    paddingBottomRight: L.point(right, compactLayout() ? (phoneLayout() ? 72 : 48) : 16),
+    paddingTopLeft: L.point(menuInset(mapEl) || 16, compactLayout() ? (phoneLayout() ? 52 : 54) : 16),
+    paddingBottomRight: L.point(right, compactLayout() ? (phoneLayout() ? 44 : 48) : 16),
   };
 }
 

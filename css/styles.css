@@ -438,12 +438,14 @@ html.has-ticker .status::before { background: var(--live); }
 
 .countdown-note {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 7px;
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.35;
 }
+
+.countdown-note span { min-width: 0; }
 
 .countdown-note b {
   color: var(--ink);
@@ -1923,8 +1925,11 @@ html.is-compact .legend-notes { display: none; }
   html.has-ticker body { padding-top: calc(34px + env(safe-area-inset-top)); }
 
   .app {
+    position: fixed;
+    inset: 0;
     flex-direction: column;
     gap: 0;
+    height: auto;
     padding: 0;
   }
 
@@ -1946,7 +1951,9 @@ html.is-compact .legend-notes { display: none; }
   .panel.is-place {
     flex: 0 0 auto;
     width: 100%;
-    height: 52dvh;
+    /* Half: as tall as the content, so the map keeps whatever is left. */
+    height: auto;
+    max-height: 64dvh;
     margin-top: -20px;
     padding: 0 max(18px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
     border-radius: 20px 20px 0 0;
@@ -1954,10 +1961,23 @@ html.is-compact .legend-notes { display: none; }
     transition: height 0.38s cubic-bezier(0.32, 0.72, 0, 1);
   }
 
-  /* Peek: handle, one-line header and the race — the result at a glance. */
-  .panel[data-detent="peek"] { height: calc(188px + env(safe-area-inset-bottom)); }
+  .panel[data-detent="half"] #city-view,
+  .panel[data-detent="half"] #place-view {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow: auto;
+  }
 
-  .panel[data-detent="full"] { height: calc(100dvh - 64px - env(safe-area-inset-top)); }
+  /* Peek: handle, one-line header and the race — the result at a glance. */
+  .panel[data-detent="peek"] {
+    height: calc(188px + env(safe-area-inset-bottom));
+    max-height: none;
+  }
+
+  .panel[data-detent="full"] {
+    height: calc(100% - 64px - env(safe-area-inset-top));
+    max-height: none;
+  }
 
   .panel.is-dragging { transition: none; }
 
