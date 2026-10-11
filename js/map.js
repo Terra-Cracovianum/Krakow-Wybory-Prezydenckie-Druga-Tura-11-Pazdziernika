@@ -34,105 +34,6 @@ init().catch((error) => {
 // scripts/visits.mjs. The times are defined further down (POLLS_CLOSE_AT).
 const VISIT_BASE = "https://abacus.jasoncameron.dev/hit/terra-cracovianum.github.io/krakow-2-tura";
 
-// "result's are in.mp3" is the music under the map from the moment the page
-// opens, and the same track from the top when the winner animation starts.
-// It is mastered at about −10 LUFS, so 0.35 is the quiet bed and 0.7 is the
-// victory level: clearly this song. It loops; the file fades out, then the
-// loop starts again. The mute choice is remembered.
-const BED_VOLUME = 0.35;
-const VICTORY_VOLUME = 0.7;
-const BED_KEY = "krakow-2-tura-muzyka";
-
-function bedMuted() {
-  try {
-    return localStorage.getItem(BED_KEY) === "off";
-  } catch {
-    return false;
-  }
-}
-
-// Starts the victory song from the beginning. Browsers block sound until a
-// gesture, so a rejected play() waits for the next tap or key, including one
-// on the winner animation, and then starts there.
-function playVictory() {
-  const audio = document.querySelector("#bed");
-  if (!audio || bedMuted()) return;
-  audio.loop = true;
-  audio.muted = false;
-  audio.volume = VICTORY_VOLUME;
-  try {
-    audio.currentTime = 0;
-  } catch {
-    /* not seekable yet; play() still starts it */
-  }
-  const attempt = audio.play();
-  if (!attempt || !attempt.catch) return;
-  attempt.catch(() => {
-    const go = () => {
-      window.removeEventListener("pointerdown", go, true);
-      window.removeEventListener("keydown", go, true);
-      playVictory();
-    };
-    window.addEventListener("pointerdown", go, true);
-    window.addEventListener("keydown", go, true);
-  });
-}
-
-function startBed() {
-  const audio = document.querySelector("#bed");
-  const button = document.querySelector("#sound-toggle");
-  if (!audio || !button) return;
-  audio.loop = true;
-  audio.volume = BED_VOLUME;
-
-  let muted = bedMuted();
-  audio.muted = muted;
-
-  const paint = () => {
-    button.classList.toggle("is-muted", muted);
-    button.setAttribute("aria-pressed", muted ? "true" : "false");
-    button.setAttribute("aria-label", muted ? "Włącz muzykę w tle" : "Wycisz muzykę w tle");
-  };
-
-  const play = () => {
-    if (muted || !audio.paused) return;
-    const attempt = audio.play();
-    if (attempt && attempt.catch) attempt.catch(() => arm());
-  };
-
-  let waiting = false;
-  const arm = () => {
-    if (waiting) return;
-    waiting = true;
-    const go = (event) => {
-      if (event.target.closest && event.target.closest("#sound-toggle")) return;
-      waiting = false;
-      window.removeEventListener("pointerdown", go, true);
-      window.removeEventListener("keydown", go, true);
-      play();
-    };
-    window.addEventListener("pointerdown", go, true);
-    window.addEventListener("keydown", go, true);
-  };
-
-  button.addEventListener("click", () => {
-    muted = !muted;
-    audio.muted = muted;
-    try {
-      localStorage.setItem(BED_KEY, muted ? "off" : "on");
-    } catch {
-      /* the button still works for this visit */
-    }
-    paint();
-    if (!muted) play();
-  });
-
-  paint();
-  if (!muted) play();
-}
-
-startBed();
-
 function countVisit() {
   const host = location.hostname;
   if (host === "localhost" || host === "127.0.0.1") return;
@@ -2039,7 +1940,6 @@ async function playWinner(candidate) {
   hideHoverCard();
   void win.offsetWidth;
   win.classList.add("is-playing");
-  playVictory();
   const close = document.querySelector("#win-close");
   close.onclick = closeWinner;
   close.focus({ preventScroll: true });
