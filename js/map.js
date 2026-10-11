@@ -35,7 +35,7 @@ init().catch((error) => {
 const VISIT_BASE = "https://abacus.jasoncameron.dev/hit/terra-cracovianum.github.io/krakow-2-tura";
 
 // The buildup under the whole page, until a winner is certain. The file is
-// mastered hot (−9 LUFS), so 0.2 lands near −23 LUFS. results-are-in.mp3
+// mastered hot (−9 LUFS), so 0.2 lands near −23 LUFS. "result's are in.mp3"
 // (−10 LUFS) replaces it at 0.4, about −18 LUFS, once someone is over half
 // and cannot be caught. The mute choice is remembered.
 const BED_VOLUME = 0.2;
