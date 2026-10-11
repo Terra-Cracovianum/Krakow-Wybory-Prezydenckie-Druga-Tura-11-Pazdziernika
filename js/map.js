@@ -1655,10 +1655,9 @@ function duelMarkup(votesById, validVotes, city) {
   return `<div class="duel-grid">${side(first, a, "is-left")}${side(second, b, "is-right")}</div>${bar}${note}`;
 }
 
-// The race to 50%, under the map. Each candidate grows from their own end:
-// share of counted valid votes × share of commissions counted. The grey
-// middle is what is still uncounted, so the bars close in on the 50% line
-// as the count goes on. Only the full count names a winner.
+// The race to 50%, under the map. Each bar is that candidate's share of
+// counted valid votes, the same figure printed above it, so the 50% line
+// is the middle of those votes. Whoever has more than half is past the line.
 function renderRace() {
   const box = document.querySelector("#race");
   if (!box) return;
@@ -1666,22 +1665,23 @@ function renderRace() {
   const [first, second] = state.candidates;
   const total = results.precinctsTotal || 0;
   const reported = results.sample ? 0 : Math.min(results.precinctsReporting || 0, total);
-  const progress = total > 0 ? reported / total : 0;
   const valid = results.validVotes;
   const votesOf = (candidate) => (typeof results.candidates[candidate.id] === "number" ? results.candidates[candidate.id] : null);
   const a = votesOf(first);
   const b = votesOf(second);
   const counted = reported > 0 && a !== null && b !== null && typeof valid === "number" && valid > 0;
-  const widthA = counted ? (a / valid) * progress * 100 : 0;
-  const widthB = counted ? (b / valid) * progress * 100 : 0;
+  const widthA = counted ? (a / valid) * 100 : 0;
+  const widthB = counted ? (b / valid) * 100 : 0;
   const complete = counted && reported >= total;
-  const winner = complete && a !== b ? (a > b ? first : second) : null;
+  const leader = counted && a !== b ? (a > b ? first : second) : null;
+  const leaderVotes = leader ? (leader === first ? a : b) : 0;
+  const crossed = Boolean(leader && leaderVotes * 2 > valid);
   const side = (candidate, votes, align) => {
     // The numbers count up together with the bar (see animateRace).
     const figure = counted
       ? `<strong data-count="${(100 * votes) / valid}" data-kind="share">0,00%</strong><span data-count="${votes}" data-kind="votes">0 głosów</span>`
       : `<strong>—</strong><span>czekamy na wyniki</span>`;
-    const won = winner && winner.id === candidate.id ? " is-winner" : "";
+    const won = crossed && leader.id === candidate.id ? " is-winner" : "";
     return `<div class="race-side ${align}${won}" style="--c:${candidate.color}">
         <span class="race-name">${escapeHtml(displayName(candidate))}</span>
         <span class="race-figure">${figure}</span>
@@ -1689,16 +1689,15 @@ function renderRace() {
   };
   const decided = decidedWinner(results);
   let middle;
-  if (winner) middle = `<b style="color:${winner.color}">Wygrywa ${escapeHtml(winner.short)}</b>`;
+  if (crossed) middle = `<b style="color:${leader.color}">Wygrywa ${escapeHtml(leader.short)}</b>`;
   else if (decided) middle = `<b class="race-decided" style="color:${decided.winner.color}">Rozstrzygnięte · ${escapeHtml(decided.winner.short)}</b>`;
   else if (complete) middle = "<b>Remis</b>";
   else if (counted) middle = "<b>50%</b> wygrywa";
   else middle = "Kto pierwszy przekroczy <b>50%</b>?";
-  const remaining = total - reported;
   const foot = complete
     ? `Policzono wszystkie ${numberFormat.format(total)} komisje`
     : counted
-      ? `Policzono ${numberFormat.format(reported)} z ${numberFormat.format(total)} ${obwodNoun(total)} · szary środek to ${numberFormat.format(remaining)} jeszcze niepoliczonych`
+      ? `Policzono ${numberFormat.format(reported)} z ${numberFormat.format(total)} ${obwodNoun(total)}`
       : `Czekamy na pierwsze wyniki PKW · 0 z ${numberFormat.format(total)} ${obwodNoun(total)}`;
 
   // First round, 27 September, as a thinner reference bar. The grey middle
@@ -1729,7 +1728,7 @@ function renderRace() {
   };
   box.classList.toggle("is-complete", complete);
   box.classList.remove("is-crossed");
-  if (winner) box.style.setProperty("--win", winner.color);
+  if (crossed) box.style.setProperty("--win", leader.color);
   box.innerHTML = `<div class="race-head">${side(first, a, "is-left")}<p class="race-middle">${middle}</p>${side(second, b, "is-right")}</div>
     <div class="race-bars">
       <div class="race-track is-main" aria-hidden="true">
@@ -1741,7 +1740,8 @@ function renderRace() {
     </div>
     ${past}
     <p class="race-foot">${foot}</p>`;
-  animateRace(box, Boolean(winner || decided), before);
+  animateRace(box, Boolean(crossed || decided), before);
+  if (crossed) announceWinner(leader);
 }
 
 // Fill in from both edges toward the middle, counting the numbers up with
