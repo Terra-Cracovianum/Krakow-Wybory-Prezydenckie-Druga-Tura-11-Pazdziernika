@@ -1,18 +1,18 @@
 {
   "status": "partial",
   "round": 2,
-  "updatedAt": "2026-10-11T19:50:12.000Z",
+  "updatedAt": "2026-10-11T19:52:28.000Z",
   "precinctsTotal": 454,
-  "precinctsReporting": 20,
-  "eligible": 6770,
-  "ballots": 2764,
-  "validCards": 2764,
-  "validVotes": 2731,
-  "invalidVotes": 33,
-  "turnout": 40.83,
+  "precinctsReporting": 28,
+  "eligible": 10987,
+  "ballots": 4542,
+  "validCards": 4542,
+  "validVotes": 4491,
+  "invalidVotes": 51,
+  "turnout": 41.34,
   "candidates": {
-    "gibala": 1864,
-    "piatkowska": 867
+    "gibala": 2931,
+    "piatkowska": 1560
   },
   "precincts": {
     "1": {
@@ -46,7 +46,16 @@
       "reported": false
     },
     "11": {
-      "reported": false
+      "reported": true,
+      "eligible": 651,
+      "ballots": 259,
+      "validCards": 259,
+      "validVotes": 255,
+      "invalidVotes": 4,
+      "votes": {
+        "gibala": 123,
+        "piatkowska": 132
+      }
     },
     "12": {
       "reported": false
@@ -313,7 +322,16 @@
       "reported": false
     },
     "100": {
-      "reported": false
+      "reported": true,
+      "eligible": 924,
+      "ballots": 405,
+      "validCards": 405,
+      "validVotes": 402,
+      "invalidVotes": 3,
+      "votes": {
+        "gibala": 269,
+        "piatkowska": 133
+      }
     },
     "101": {
       "reported": false
@@ -1222,7 +1240,16 @@
       }
     },
     "388": {
-      "reported": false
+      "reported": true,
+      "eligible": 993,
+      "ballots": 418,
+      "validCards": 418,
+      "validVotes": 415,
+      "invalidVotes": 3,
+      "votes": {
+        "gibala": 259,
+        "piatkowska": 156
+      }
     },
     "389": {
       "reported": false
@@ -1234,7 +1261,16 @@
       "reported": false
     },
     "392": {
-      "reported": false
+      "reported": true,
+      "eligible": 916,
+      "ballots": 404,
+      "validCards": 404,
+      "validVotes": 400,
+      "invalidVotes": 4,
+      "votes": {
+        "gibala": 246,
+        "piatkowska": 154
+      }
     },
     "393": {
       "reported": false
@@ -1330,13 +1366,31 @@
       }
     },
     "415": {
-      "reported": false
+      "reported": true,
+      "eligible": 9,
+      "ballots": 6,
+      "validCards": 6,
+      "validVotes": 6,
+      "invalidVotes": 0,
+      "votes": {
+        "gibala": 3,
+        "piatkowska": 3
+      }
     },
     "416": {
       "reported": false
     },
     "417": {
-      "reported": false
+      "reported": true,
+      "eligible": 0,
+      "ballots": 0,
+      "validCards": 0,
+      "validVotes": 0,
+      "invalidVotes": 0,
+      "votes": {
+        "gibala": 0,
+        "piatkowska": 0
+      }
     },
     "418": {
       "reported": false
@@ -1345,7 +1399,16 @@
       "reported": false
     },
     "420": {
-      "reported": false
+      "reported": true,
+      "eligible": 47,
+      "ballots": 17,
+      "validCards": 17,
+      "validVotes": 17,
+      "invalidVotes": 0,
+      "votes": {
+        "gibala": 16,
+        "piatkowska": 1
+      }
     },
     "421": {
       "reported": false
@@ -1555,7 +1618,16 @@
       "reported": false
     },
     "454": {
-      "reported": false
+      "reported": true,
+      "eligible": 57,
+      "ballots": 1,
+      "validCards": 1,
+      "validVotes": 1,
+      "invalidVotes": 0,
+      "votes": {
+        "gibala": 1,
+        "piatkowska": 0
+      }
     }
   },
   "source": "https://wybory.gov.pl/wojtburmistrz_2024_2029/data/details/4485.blob",
