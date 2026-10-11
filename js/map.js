@@ -34,26 +34,34 @@ init().catch((error) => {
 // scripts/visits.mjs. The times are defined further down (POLLS_CLOSE_AT).
 const VISIT_BASE = "https://abacus.jasoncameron.dev/hit/terra-cracovianum.github.io/krakow-2-tura";
 
-// The buildup under the whole page. The file is mastered hot (−9 LUFS),
-// so 0.2 lands near −23 LUFS: present, still in the background. The choice
-// is remembered; a fresh visit plays.
+// The buildup under the whole page, until a winner is certain. The file is
+// mastered hot (−9 LUFS), so 0.2 lands near −23 LUFS. results-are-in.mp3
+// (−10 LUFS) replaces it at 0.4, about −18 LUFS, once someone is over half
+// and cannot be caught. The mute choice is remembered.
 const BED_VOLUME = 0.2;
+const WIN_VOLUME = 0.4;
 const BED_KEY = "krakow-2-tura-muzyka";
+let playWinTheme = () => {};
 
 function startBed() {
   const audio = document.querySelector("#bed");
+  const fanfare = document.querySelector("#win-music");
   const button = document.querySelector("#sound-toggle");
-  if (!audio || !button) return;
+  if (!audio || !fanfare || !button) return;
   audio.loop = true;
   audio.volume = BED_VOLUME;
+  fanfare.loop = false;
+  fanfare.volume = WIN_VOLUME;
 
   let muted = false;
+  let theme = false;
   try {
     muted = localStorage.getItem(BED_KEY) === "off";
   } catch {
     muted = false;
   }
   audio.muted = muted;
+  fanfare.muted = muted;
 
   const paint = () => {
     button.classList.toggle("is-muted", muted);
@@ -62,7 +70,15 @@ function startBed() {
   };
 
   const play = () => {
-    if (muted || !audio.paused) return;
+    if (muted) return;
+    if (theme) {
+      audio.pause();
+      if (fanfare.ended || !fanfare.paused) return;
+      const attempt = fanfare.play();
+      if (attempt && attempt.catch) attempt.catch(() => arm());
+      return;
+    }
+    if (!audio.paused) return;
     const attempt = audio.play();
     if (attempt && attempt.catch) attempt.catch(() => arm());
   };
@@ -82,9 +98,21 @@ function startBed() {
     window.addEventListener("keydown", go, true);
   };
 
+  playWinTheme = () => {
+    theme = true;
+    audio.pause();
+    fanfare.pause();
+    fanfare.currentTime = 0;
+    fanfare.muted = muted;
+    if (muted) return;
+    const attempt = fanfare.play();
+    if (attempt && attempt.catch) attempt.catch(() => arm());
+  };
+
   button.addEventListener("click", () => {
     muted = !muted;
     audio.muted = muted;
+    fanfare.muted = muted;
     try {
       localStorage.setItem(BED_KEY, muted ? "off" : "on");
     } catch {
@@ -1867,6 +1895,9 @@ function announceWinner(candidate) {
     return;
   }
   winStage = stage;
+  const valid = state.results.validVotes;
+  const votes = state.results.candidates[candidate.id];
+  if (typeof valid === "number" && valid > 0 && typeof votes === "number" && votes * 2 > valid) playWinTheme();
   playWinner(candidate);
 }
 
