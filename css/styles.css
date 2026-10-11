@@ -2481,6 +2481,7 @@ html.is-compact .legend-notes { display: none; }
     height: 32vh;
     min-height: 168px;
     max-height: 280px;
+    margin-top: 36px;
     transform: none;
     justify-content: center;
   }
@@ -2520,11 +2521,11 @@ html.is-compact .legend-notes { display: none; }
   .win-stats strong { font-size: 22px; }
   .win-stats span { font-size: 10px; letter-spacing: .04em; line-height: 1.25; white-space: normal; }
   .win-skyline img { mask-image: linear-gradient(to bottom, #000 70%, transparent 100%); filter: brightness(.36) saturate(.55) contrast(1.05); }
-  .win-skyline .win-wawel { height: 26vh; left: -8vw; top: 7vh; bottom: auto; }
-  .win-skyline .win-mariacki { height: 30vh; right: -6vw; top: 5vh; bottom: auto; }
-  .win-skyline .win-palac { width: 160vw; top: 16vh; bottom: auto; filter: brightness(.3) saturate(.5); }
+  .win-skyline .win-wawel { height: 26vh; left: -8vw; top: 13vh; bottom: auto; }
+  .win-skyline .win-mariacki { height: 30vh; right: -6vw; top: 11vh; bottom: auto; }
+  .win-skyline .win-palac { width: 160vw; top: 22vh; bottom: auto; filter: brightness(.3) saturate(.5); }
   .win-skyline::after {
-    background: linear-gradient(to top, var(--win-bg) 0%, var(--win-bg) 62%, color-mix(in srgb, var(--win-bg) 55%, transparent) 74%, transparent 88%);
+    background: linear-gradient(to top, var(--win-bg) 0%, var(--win-bg) 66%, color-mix(in srgb, var(--win-bg) 55%, transparent) 78%, transparent 92%);
   }
   .win-brand { display: none; }
   .win-close {
