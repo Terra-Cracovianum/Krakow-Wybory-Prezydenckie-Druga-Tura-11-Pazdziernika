@@ -14,7 +14,7 @@ The ballot has two names, in alphabetical order: 1 Łukasz Gibała, 2 Monika Jad
 
 When every commission has reported, and the file is not marked as sample data, three things appear together:
 
-- a red ticker across the top, naming the winner and both vote counts
+- a tall blue ticker across the top, in Gibała's colour (`#1f6fe0`), naming the winner and both vote counts
 - a card over the map naming the winner and showing both candidates
 - the full-screen winner announcement with confetti (see below)
 

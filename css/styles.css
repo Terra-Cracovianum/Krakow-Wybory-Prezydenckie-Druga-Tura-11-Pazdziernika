@@ -106,10 +106,11 @@ button { font-family: inherit; }
   z-index: 900;
   display: flex;
   align-items: stretch;
-  height: 36px;
-  background: #1d1d1f;
+  height: 72px;
+  background: #1f6fe0;
   color: #fff;
   overflow: hidden;
+  box-shadow: 0 10px 28px rgba(31, 111, 224, 0.38);
 }
 
 .ticker[hidden] { display: none; }
@@ -117,20 +118,23 @@ button { font-family: inherit; }
 .ticker-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex: none;
   margin: 0;
-  padding: 0 14px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 0 22px;
+  background: rgba(0, 0, 0, 0.16);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .ticker-label::before {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #ff453a;
+  background: #fff;
 }
 
 .ticker-live {
@@ -163,9 +167,10 @@ button { font-family: inherit; }
 
 .ticker-track span {
   flex: none;
-  padding-right: 3rem;
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding-right: 4.5rem;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
   white-space: nowrap;
 }
 
@@ -180,7 +185,7 @@ html.has-ticker body {
   overflow: hidden;
 }
 
-html.has-ticker body { padding-top: 36px; }
+html.has-ticker body { padding-top: 72px; }
 
 html.has-ticker .app { height: 100%; }
 
@@ -1951,11 +1956,15 @@ html.is-compact .legend-notes { display: none; }
 
 @media (max-width: 860px) and (orientation: portrait) {
   .ticker {
-    height: calc(34px + env(safe-area-inset-top));
+    height: calc(58px + env(safe-area-inset-top));
     padding-top: env(safe-area-inset-top);
   }
 
-  html.has-ticker body { padding-top: calc(34px + env(safe-area-inset-top)); }
+  .ticker-label { padding: 0 14px; font-size: 0.78rem; }
+
+  .ticker-track span { font-size: 1.05rem; padding-right: 2.5rem; }
+
+  html.has-ticker body { padding-top: calc(58px + env(safe-area-inset-top)); }
 
   .app {
     position: fixed;
@@ -2535,11 +2544,11 @@ html.is-compact .legend-notes { display: none; }
 
 @media (min-width: 861px) and (min-height: 561px) {
   .sound-toggle { top: 148px; right: 32px; }
-  html.has-ticker .sound-toggle { top: calc(36px + 148px); }
+  html.has-ticker .sound-toggle { top: calc(72px + 148px); }
 }
 
 @media (max-width: 860px), (max-height: 560px) {
-  html.has-ticker .sound-toggle { top: calc(34px + env(safe-area-inset-top) + 8px); }
+  html.has-ticker .sound-toggle { top: calc(58px + env(safe-area-inset-top) + 8px); }
 }
 
 body:has(#win:not([hidden])) .sound-toggle {
