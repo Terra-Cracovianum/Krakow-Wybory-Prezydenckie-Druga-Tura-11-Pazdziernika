@@ -16,7 +16,7 @@ When every commission has reported, and the file is not marked as sample data, t
 
 - a red ticker across the top, naming the winner and both vote counts
 - a card over the map naming the winner and showing both candidates
-- a short burst of confetti in the winner's colour, once per browser tab
+- the full-screen winner announcement with confetti (see below)
 
 On an exact tie the card says “Remis” and names nobody, and there is no confetti.
 
@@ -181,17 +181,15 @@ On a computer, the top right of the map has the progress card `#pkw-wait` (`rend
 
 `renderRunoff` runs only when `sample` is absent and `precinctsReporting >= precinctsTotal`. It writes `#runoff` and calls `renderTicker`. The ticker copies its sentence into `#ticker-live` once, for the screen reader, and duplicates the visible track until it is at least twice the viewport. `prefers-reduced-motion` leaves a single static line. The sentence is “Druga tura, 11 października 2026. Prezydentem Krakowa zostaje {name}, {n} głosów ({percent}). {second name}, {n} głosów.” (`tickerLine`). It uses “Prezydentką” when the winner has `feminine: true`.
 
-`celebrateCount` reads `sessionStorage` key `krakow-wybory-2-tura-confetti`. Reduced motion skips it. It does not run again in the same tab.
-
 `countVisit` skips `localhost` and `127.0.0.1`. Visits are split at the polls closing (`POLLS_CLOSE_AT`, Sunday 21:00): period `przed` before, `po` after. Each period has two abacus counters under `terra-cracovianum.github.io`: `krakow-2-tura-{period}-wejscia` (every page load) and `krakow-2-tura-{period}-osoby` (once per browser per period, remembered in `localStorage` key `krakow-2-tura-osoba-{period}`). `node scripts/visits.mjs` prints all four. The “Razem” row adds the periods, so someone who visited in both counts twice there. Both sites are served from `terra-cracovianum.github.io` and share browser storage, which is why every key has `2-tura` in it. Do not put an admin key in the repository or in this document.
 
 ## Winner decided before the full count
 
-`decidedWinner` names a winner early only when it is certain: the lead in votes is larger than every vote still possible in the commissions not counted yet. For each open commission the ceiling (`voteCeiling`) is its eligible voters (the PKW number when the results file carries it, otherwise the first round's, from `data/eligible-round1.json`), plus 10% and 50 more for voters added on the day with a certificate. For commissions 413–454 (hospitals, care homes, prisons), whose lists change from day to day, it is twice that number plus 50. When it holds, `#decided` shows “Zwycięzca rozstrzygnięty” with the winner and the numbers behind it, the race says “Rozstrzygnięte · {name}”, and the confetti plays once. When every commission is counted, the usual “Wygrywa” takes over.
+`decidedWinner` names a winner early only when it is certain: the lead in votes is larger than every vote still possible in the commissions not counted yet. For each open commission the ceiling (`voteCeiling`) is its eligible voters (the PKW number when the results file carries it, otherwise the first round's, from `data/eligible-round1.json`), plus 10% and 50 more for voters added on the day with a certificate. For commissions 413–454 (hospitals, care homes, prisons), whose lists change from day to day, it is twice that number plus 50. When it holds, `#decided` shows “Zwycięzca rozstrzygnięty” with the winner and the numbers behind it, the race says “Rozstrzygnięte · {name}”, and the winner announcement plays. When every commission is counted, the usual “Wygrywa” takes over.
 
 ## Winner announcement
 
-`announceWinner` opens a full-screen broadcast-style sequence (`#win`, about six seconds) the first time a winner is certain: either `decidedWinner` holds, or the full count names a winner in `renderRunoff`. It never opens on a lead that could still change, never on `sample` data, and never while the history slider is replaying. It plays once per tab (`sessionStorage` key `krakow-2-tura-zwyciezca`) and replaces the small confetti burst. “Zobacz mapę wyników” or Escape closes it.
+`announceWinner` opens a full-screen broadcast-style sequence (`#win`, about six seconds) once a winner is certain: either `decidedWinner` holds, or the full count names a winner in `renderRunoff`. It never opens on a lead that could still change, never on `sample` data, and never while the history slider is replaying. It plays on every page load while a winner is certain, and once more on the same page when PKW has counted every commission (`winStage`: `decided`, then `final`), even if the reader closed the first one. If it is open when the full count arrives, it starts again with the final figures. It replaced the small confetti burst (`celebrateCount` is gone). “Zobacz mapę wyników” or Escape closes it.
 
 The sequence: colour sweeps; the winner's share of the counted valid votes climbs to the 50% line and past it; the Kraków skyline rises (Pałac Wielopolskich, the mayor's seat; the Wawel cathedral towers; St Mary's); the portrait, the name, the “Prezydent/Prezydentka Krakowa” ribbon, a sentence, three figures and a running strip follow, with confetti from both corners. Pictures are in `img/zwyciezca/` (WebP, transparent). The surname shrinks to fit (`fitWinnerName`). Reduced motion shows the end state at once.
 

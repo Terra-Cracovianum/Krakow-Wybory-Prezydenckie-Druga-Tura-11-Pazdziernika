@@ -1499,35 +1499,6 @@ function voteNoun(votes) {
   return "głosów";
 }
 
-function celebrateCount(rows) {
-  if (state.replay) return;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const seen = "krakow-wybory-2-tura-confetti";
-  try {
-    if (sessionStorage.getItem(seen)) return;
-    sessionStorage.setItem(seen, "1");
-  } catch {
-    return;
-  }
-  const layer = document.querySelector("#confetti");
-  const colors = rows.map((row) => row.candidate.color);
-  colors.push("#f3e6d4");
-  for (let index = 0; index < 46; index += 1) {
-    const piece = document.createElement("span");
-    piece.className = "confetti-piece";
-    piece.style.left = `${Math.random() * 100}%`;
-    piece.style.background = colors[index % colors.length];
-    piece.style.animationDelay = `${Math.random() * 0.28}s`;
-    piece.style.animationDuration = `${1.55 + Math.random() * 0.7}s`;
-    piece.style.setProperty("--drift", `${Math.round((Math.random() - 0.5) * 140)}px`);
-    piece.style.setProperty("--spin", `${Math.round((Math.random() - 0.5) * 420)}deg`);
-    piece.style.width = `${6 + (index % 3) * 2}px`;
-    piece.style.height = `${9 + (index % 4) * 2}px`;
-    layer.appendChild(piece);
-  }
-  window.setTimeout(() => layer.replaceChildren(), 2600);
-}
-
 function runoffPlace(row, place, valid) {
   const { candidate, votes } = row;
   const width = typeof valid === "number" && valid > 0 ? (votes / valid) * 100 : 0;
@@ -1812,33 +1783,24 @@ function renderDecided() {
   announceWinner(winner);
 }
 
-// The winner announcement (#win): a full-screen sequence, once per tab, when
-// decidedWinner is certain or the full count names a winner. Every number in
-// it comes from data/results.json. While the count goes on it says so, and
-// the figures update in place if a new count arrives while it is open.
-const WIN_SEEN = "krakow-2-tura-zwyciezca";
+// The winner announcement (#win): a full-screen sequence that plays on every
+// page load once decidedWinner is certain, and once more when PKW has counted
+// every commission, with the final figures. Every number in it comes from
+// data/results.json. While the count goes on it says so, and the figures
+// update in place if a new count arrives while it is open.
 let winOpen = false;
-let winShown = false;
+let winStage = null; // "decided" or "final": what this page load has shown
 let winTimers = [];
 let winReturnFocus = null;
 
 function announceWinner(candidate) {
   if (state.replay || state.results.sample) return;
-  if (winOpen) {
-    fillWinner(candidate);
+  const stage = state.results.precinctsReporting >= state.results.precinctsTotal ? "final" : "decided";
+  if (stage === winStage) {
+    if (winOpen) fillWinner(candidate);
     return;
   }
-  if (winShown) return;
-  winShown = true;
-  try {
-    if (sessionStorage.getItem(WIN_SEEN)) return;
-    sessionStorage.setItem(WIN_SEEN, "1");
-    // The overlay has its own confetti; the small burst stays quiet.
-    sessionStorage.setItem("krakow-wybory-2-tura-confetti", "1");
-  } catch {
-    celebrateCount([{ candidate }]);
-    return;
-  }
+  winStage = stage;
   playWinner(candidate);
 }
 
@@ -1964,10 +1926,14 @@ async function playWinner(candidate) {
     new Promise((resolve) => window.setTimeout(resolve, 2000)),
   ]);
 
+  // Played again over itself when the full count arrives while it is open.
+  winTimers.forEach((timer) => window.clearTimeout(timer));
+  winTimers = [];
+  winConfetti.stop();
+  if (!winOpen) winReturnFocus = document.activeElement;
   winOpen = true;
-  winReturnFocus = document.activeElement;
   win.hidden = false;
-  win.classList.remove("is-leaving");
+  win.classList.remove("is-leaving", "is-playing");
   win.classList.add("is-counting");
   fillWinner(candidate);
   const f = winnerFigures(candidate);
@@ -2030,6 +1996,7 @@ function closeWinner() {
   win.classList.add("is-leaving");
   winConfetti.stop();
   window.setTimeout(() => {
+    if (winOpen) return;
     win.hidden = true;
     win.classList.remove("is-playing", "is-leaving", "is-counting");
   }, 360);
