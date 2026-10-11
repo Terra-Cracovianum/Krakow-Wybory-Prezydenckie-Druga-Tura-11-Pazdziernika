@@ -357,6 +357,178 @@
           }
         }
       ]
+    },
+    {
+      "at": "2026-10-11T19:36:12.000Z",
+      "precinctsReporting": 4,
+      "precinctsTotal": 454,
+      "percent": 0.88,
+      "eligible": 155,
+      "ballots": 38,
+      "validCards": 38,
+      "validVotes": 38,
+      "invalidVotes": 0,
+      "turnout": 24.52,
+      "candidates": {
+        "gibala": 27,
+        "piatkowska": 11
+      },
+      "shares": {
+        "gibala": 71.05,
+        "piatkowska": 28.95
+      },
+      "districts": [
+        {
+          "dzielnica": "Dzielnica I",
+          "precincts": 23,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica II",
+          "precincts": 18,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica III",
+          "precincts": 27,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica IV",
+          "precincts": 38,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica V",
+          "precincts": 19,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica VI",
+          "precincts": 14,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica VII",
+          "precincts": 11,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica VIII",
+          "precincts": 37,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica IX",
+          "precincts": 9,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica X",
+          "precincts": 16,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica XI",
+          "precincts": 28,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica XII",
+          "precincts": 35,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica XIII",
+          "precincts": 22,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica XIV",
+          "precincts": 18,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica XV",
+          "precincts": 26,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica XVI",
+          "precincts": 24,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica XVII",
+          "precincts": 12,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Dzielnica XVIII",
+          "precincts": 35,
+          "reporting": 0,
+          "validVotes": 0,
+          "votes": {}
+        },
+        {
+          "dzielnica": "Obwody specjalne",
+          "precincts": 42,
+          "reporting": 4,
+          "validVotes": 38,
+          "votes": {
+            "gibala": 27,
+            "piatkowska": 11
+          }
+        }
+      ],
+      "added": [
+        {
+          "nr": 452,
+          "eligible": 49,
+          "ballots": 6,
+          "validCards": 6,
+          "validVotes": 6,
+          "invalidVotes": 0,
+          "votes": {
+            "gibala": 2,
+            "piatkowska": 4
+          }
+        }
+      ]
     }
   ]
 }
