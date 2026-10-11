@@ -1,18 +1,18 @@
 {
   "status": "partial",
   "round": 2,
-  "updatedAt": "2026-10-11T21:30:12.000Z",
+  "updatedAt": "2026-10-11T21:32:28.000Z",
   "precinctsTotal": 454,
-  "precinctsReporting": 437,
-  "eligible": 563137,
-  "ballots": 248857,
-  "validCards": 248908,
-  "validVotes": 246442,
-  "invalidVotes": 2466,
+  "precinctsReporting": 438,
+  "eligible": 564221,
+  "ballots": 249311,
+  "validCards": 249363,
+  "validVotes": 246889,
+  "invalidVotes": 2474,
   "turnout": 44.2,
   "candidates": {
-    "gibala": 153479,
-    "piatkowska": 92963
+    "gibala": 153725,
+    "piatkowska": 93164
   },
   "precincts": {
     "1": {
@@ -52,7 +52,16 @@
       }
     },
     "4": {
-      "reported": false
+      "reported": true,
+      "eligible": 1084,
+      "ballots": 454,
+      "validCards": 455,
+      "validVotes": 447,
+      "invalidVotes": 8,
+      "votes": {
+        "gibala": 246,
+        "piatkowska": 201
+      }
     },
     "5": {
       "reported": true,
