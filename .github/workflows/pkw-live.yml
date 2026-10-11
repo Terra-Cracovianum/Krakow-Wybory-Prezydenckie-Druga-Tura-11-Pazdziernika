@@ -3,17 +3,18 @@ name: Wyniki PKW na żywo
 # Checks PKW every 30 seconds and republishes data/results.json whenever more
 # commissions are counted, until PKW has counted all of them.
 #
-# Start it by hand: Actions → "Wyniki PKW na żywo" → Run workflow, paste the
-# PKW address. Or set the repository variable PKW_URL (Settings → Secrets and
-# variables → Actions → Variables) and it starts itself at 20:50 on Sunday
-# 11 October (18:50 UTC). Commits are made as Adam, like every other commit.
+# Start it by hand: Actions → "Wyniki PKW na żywo" → Run workflow.
+# The Kraków file is already the default (4485.blob). A repository variable
+# PKW_URL replaces it. The schedule starts at 20:50 on Sunday 11 October
+# (18:50 UTC). Commits are made as Adam, like every other commit.
 
 on:
   workflow_dispatch:
     inputs:
       url:
-        description: "Adres danych PKW"
-        required: true
+        description: "Adres danych PKW (puste = plik Krakowa 4485.blob)"
+        required: false
+        default: "https://wybory.gov.pl/wojtburmistrz_2024_2029/data/details/4485.blob"
       interval:
         description: "Co ile sekund sprawdzać"
         default: "30"
@@ -48,12 +49,7 @@ jobs:
 
       - name: Watch PKW
         env:
-          PKW_URL: ${{ inputs.url || vars.PKW_URL }}
+          PKW_URL: ${{ inputs.url || vars.PKW_URL || 'https://wybory.gov.pl/wojtburmistrz_2024_2029/data/details/4485.blob' }}
           PKW_INTERVAL: ${{ inputs.interval || '30' }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ -z "$PKW_URL" ]; then
-            echo "Brak adresu PKW (pole url albo zmienna PKW_URL). Kończę."
-            exit 0
-          fi
-          node scripts/pkw-watch.mjs --push --max-hours 5.7
+        run: node scripts/pkw-watch.mjs --push --max-hours 5.7

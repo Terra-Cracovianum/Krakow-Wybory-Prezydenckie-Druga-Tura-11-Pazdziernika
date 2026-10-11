@@ -23,13 +23,16 @@ import { execFileSync } from "node:child_process";
 import { gunzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { toResults } from "./pkw-adapter.mjs";
+import { inspectPkw, PKW_BLOB_URL, PKW_PAGE_URL, toResults } from "./pkw-adapter.mjs";
+import { nextHistory } from "./pkw-history.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const RESULTS = path.join(ROOT, "data", "results.json");
+const HISTORY = path.join(ROOT, "data", "history.json");
+const DISTRICTS = path.join(ROOT, "data", "districts.geojson");
 
 const args = parseArgs(process.argv.slice(2));
-const url = args.url || process.env.PKW_URL;
+const url = args.url || process.env.PKW_URL || PKW_BLOB_URL;
 const interval = Math.max(10, Number(args.interval || process.env.PKW_INTERVAL || 30));
 const maxHours = Number(args["max-hours"] || 8);
 const format = args.format || "pkw";
@@ -38,6 +41,9 @@ if (!url) {
   console.error("Podaj adres danych PKW: --url <adres> (albo zmienna PKW_URL).");
   process.exit(2);
 }
+
+log(`Źródło: ${url}`);
+log(`Strona PKW: ${PKW_PAGE_URL}`);
 
 const candidates = JSON.parse(await readFile(path.join(ROOT, "data", "candidates.json"), "utf8")).candidates;
 const started = Date.now();
@@ -57,7 +63,11 @@ for (;;) {
 
 async function check() {
   const raw = await download(url);
-  const next = format === "results" ? JSON.parse(raw) : toResults(raw, { candidates });
+  if (format !== "results") {
+    const info = inspectPkw(raw);
+    log(`Plik PKW: ${info.file || "bez nazwy"}, protokoły drugiej tury: ${info.protocols}/${info.commissions}, aktualizacja ${info.updatedAt}.`);
+  }
+  const next = format === "results" ? JSON.parse(raw.toString("utf8")) : toResults(raw, { candidates });
   validate(next);
   const current = JSON.parse(await readFile(RESULTS, "utf8"));
   const was = current.precinctsReporting || 0;
@@ -69,19 +79,29 @@ async function check() {
   // status change at 100% also counts.
   const final = done && current.status !== "final";
   if (now <= was && !final) return done && current.status === "final";
+  const districts = JSON.parse(await readFile(DISTRICTS, "utf8"));
+  const previousHistory = JSON.parse(await readFile(HISTORY, "utf8").catch(() => "{}"));
+  const history = nextHistory(previousHistory, {
+    previous: current,
+    next,
+    districts,
+    source: url,
+    page: PKW_PAGE_URL,
+  });
   if (args["dry-run"]) {
-    log("(dry run) opublikowałbym nowy stan.");
+    log("(dry run) opublikowałbym nowy stan i dopisał godzinę do data/history.json.");
     return done;
   }
   await writeFile(RESULTS, `${JSON.stringify(next, null, 2)}\n`);
-  log(`zapisano data/results.json (${now}/${total}).`);
+  await writeFile(HISTORY, `${JSON.stringify(history, null, 2)}\n`);
+  log(`zapisano data/results.json i data/history.json (${now}/${total}).`);
   if (args.push) publish(`Refresh the PKW count to ${now} commissions, ${percent(now, total)} percent.`);
   return done;
 }
 
 function publish(message) {
   const git = (...rest) => execFileSync("git", rest, { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"] }).toString().trim();
-  git("add", "data/results.json");
+  git("add", "data/results.json", "data/history.json");
   try {
     git("commit", "-m", message);
   } catch {
@@ -131,7 +151,7 @@ async function download(address) {
       if (!response.ok) throw new Error(`PKW odpowiedziało ${response.status}`);
       let bytes = Buffer.from(await response.arrayBuffer());
       if (bytes[0] === 0x1f && bytes[1] === 0x8b) bytes = gunzipSync(bytes);
-      return bytes.toString("utf8");
+      return bytes;
     } catch (error) {
       lastError = error;
       await sleep(2000 * attempt);

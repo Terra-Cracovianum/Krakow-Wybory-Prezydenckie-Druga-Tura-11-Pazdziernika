@@ -40,7 +40,7 @@
       href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"
       crossorigin=""
     />
-    <link rel="stylesheet" href="css/styles.css?v=20261008c" />
+    <link rel="stylesheet" href="css/styles.css?v=20261011a" />
   </head>
   <body>
     <div id="ticker" class="ticker" hidden>
@@ -101,7 +101,19 @@
           </p>
           <p class="sources">
             454 komisje PKW, numery 1–454. Granice obwodów: MSIP Kraków.
+            Liczenie:
+            <a href="https://wybory.gov.pl/wojtburmistrz_2024_2029/pl/wyniki/gm/4485">wybory.gov.pl</a>,
+            plik <a href="https://wybory.gov.pl/wojtburmistrz_2024_2029/data/details/4485.blob">4485.blob</a>
+            sprawdzany co 30 sekund.
           </p>
+          <section class="history" id="history" hidden>
+            <div class="history-head">
+              <span>Przebieg liczenia</span>
+              <time id="history-when"></time>
+            </div>
+            <input id="history-range" type="range" min="0" max="0" value="0" aria-label="Godzina liczenia" />
+            <p id="history-note"></p>
+          </section>
         </div>
         <div id="place-view" hidden></div>
         <footer class="colophon">
@@ -152,6 +164,6 @@
     ></script>
     <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
     <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.0/leaflet-maplibre-gl.js"></script>
-    <script src="js/map.js?v=20261008b"></script>
+    <script src="js/map.js?v=20261011a"></script>
   </body>
 </html>

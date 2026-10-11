@@ -13,6 +13,9 @@ const state = {
   map: null,
   cityBounds: null,
   focusFeature: null,
+  liveResults: null,
+  history: { events: [] },
+  replay: false,
 };
 
 const query = document.querySelector("#query");
@@ -56,17 +59,20 @@ function countVisit() {
 }
 
 async function init() {
-  const [candidateFile, results, precincts, stations, districts, eligibleFile] = await Promise.all([
+  const [candidateFile, results, precincts, stations, districts, eligibleFile, history] = await Promise.all([
     fetch("data/candidates.json").then((response) => response.json()),
     fetch("data/results.json", { cache: "no-store" }).then((response) => response.json()),
     fetch("data/precincts.geojson").then((response) => response.json()),
     fetch("data/stations.geojson").then((response) => response.json()),
     fetch("data/districts.geojson").then((response) => response.json()),
     fetch("data/eligible-round1.json").then((response) => response.json()).catch(() => ({ eligible: {} })),
+    fetch("data/history.json", { cache: "no-store" }).then((response) => (response.ok ? response.json() : { events: [] })).catch(() => ({ events: [] })),
   ]);
 
   state.candidates = candidateFile.candidates;
   state.results = results;
+  state.liveResults = results;
+  state.history = history && Array.isArray(history.events) ? history : { events: [] };
   state.stations = stations;
   state.precinctFeatures = precincts;
   state.districts = districts;
@@ -76,6 +82,8 @@ async function init() {
   placeRace();
   renderSummary();
   renderCandidates();
+  renderHistory();
+  bindHistory();
 
   const cityBounds = L.geoJSON(precincts).getBounds();
   state.cityBounds = cityBounds;
@@ -1488,6 +1496,7 @@ function voteNoun(votes) {
 }
 
 function celebrateCount(rows) {
+  if (state.replay) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const seen = "krakow-wybory-2-tura-confetti";
   try {
@@ -1813,15 +1822,28 @@ function startPolling() {
 async function refreshResults() {
   if (document.hidden || !state.map) return;
   let next;
+  let history;
   try {
-    const response = await fetch("data/results.json", { cache: "no-store" });
+    const [response, historyResponse] = await Promise.all([
+      fetch("data/results.json", { cache: "no-store" }),
+      fetch("data/history.json", { cache: "no-store" }),
+    ]);
     if (!response.ok) return;
     next = await response.json();
+    history = historyResponse.ok ? await historyResponse.json() : state.history;
   } catch {
     return;
   }
-  const prev = state.results;
-  if (next.updatedAt === prev.updatedAt && next.precinctsReporting === prev.precinctsReporting) return;
+  const previousLive = state.liveResults;
+  state.liveResults = next;
+  if (history && Array.isArray(history.events)) state.history = history;
+  renderHistory();
+  if (state.replay) return;
+  if (previousLive && next.updatedAt === previousLive.updatedAt && next.precinctsReporting === previousLive.precinctsReporting) return;
+  showResults(next);
+}
+
+function showResults(next) {
   state.results = next;
   renderSummary();
   renderCandidates();
@@ -1830,13 +1852,99 @@ async function refreshResults() {
   renderLegend();
   renderDistrictMenu();
   const place = document.querySelector("#place-view");
-  if (!place.hidden) {
-    const scroll = place.scrollTop;
-    if (state.focusFeature) place.innerHTML = stationPopup(state.focusFeature, state.highlightNr);
-    else if (state.district) place.innerHTML = districtSheet(state.districts.features.find((item) => item.properties.dzielnica === state.district));
-    bindPlaceActions(place);
-    place.scrollTop = scroll;
+  if (!place || place.hidden) return;
+  const scroll = place.scrollTop;
+  if (state.focusFeature) place.innerHTML = stationPopup(state.focusFeature, state.highlightNr);
+  else if (state.district) place.innerHTML = districtSheet(state.districts.features.find((item) => item.properties.dzielnica === state.district));
+  bindPlaceActions(place);
+  place.scrollTop = scroll;
+}
+
+function bindHistory() {
+  const range = document.querySelector("#history-range");
+  if (!range || range.dataset.bound) return;
+  range.dataset.bound = "1";
+  range.addEventListener("input", () => {
+    const events = (state.history && state.history.events) || [];
+    const index = Number(range.value);
+    const atEnd = events.length === 0 || index >= events.length - 1;
+    state.replay = !atEnd;
+    showResults(atEnd ? state.liveResults : foldHistory(events, index, state.liveResults));
+    renderHistory();
+  });
+}
+
+function renderHistory() {
+  const box = document.querySelector("#history");
+  const range = document.querySelector("#history-range");
+  const when = document.querySelector("#history-when");
+  const note = document.querySelector("#history-note");
+  if (!box || !range || !when || !note) return;
+  const events = (state.history && state.history.events) || [];
+  box.hidden = events.length === 0;
+  if (!events.length) return;
+  const max = events.length - 1;
+  range.max = String(max);
+  range.hidden = events.length < 2;
+  if (!state.replay) range.value = String(max);
+  const index = Math.min(max, Math.max(0, Number(range.value) || 0));
+  const event = events[index];
+  const live = !state.replay || index === max;
+  when.textContent = live ? "Teraz" : warsawTime(event.at);
+  when.dateTime = event.at || "";
+  const gShare = event.shares && event.shares.gibala;
+  const pShare = event.shares && event.shares.piatkowska;
+  const counted = `${numberFormat.format(event.precinctsReporting)} z ${numberFormat.format(event.precinctsTotal)} obwodów (${formatShare(event.percent)})`;
+  const split = `Gibała ${formatShare(gShare)} · Piątkowska ${formatShare(pShare)} ważnych głosów`;
+  note.textContent = live ? `${warsawTime(event.at)} · ${counted}. ${split}.` : `${counted}. ${split}.`;
+}
+
+function warsawTime(iso) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("pl-PL", {
+    timeZone: "Europe/Warsaw",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function foldHistory(events, index, template) {
+  const total = template.precinctsTotal;
+  const precincts = {};
+  for (let nr = 1; nr <= total; nr += 1) precincts[String(nr)] = { reported: false };
+  for (const event of events.slice(0, index + 1)) {
+    for (const row of event.added || []) {
+      precincts[String(row.nr)] = {
+        reported: true,
+        eligible: row.eligible || 0,
+        ballots: row.ballots || 0,
+        validCards: row.validCards || 0,
+        validVotes: row.validVotes || 0,
+        invalidVotes: row.invalidVotes || 0,
+        votes: { ...(row.votes || {}) },
+      };
+    }
   }
+  const event = events[index];
+  return {
+    status: event.precinctsReporting >= total ? "final" : "partial",
+    round: 2,
+    updatedAt: event.at,
+    precinctsTotal: total,
+    precinctsReporting: event.precinctsReporting,
+    eligible: event.eligible,
+    ballots: event.ballots,
+    validCards: event.validCards,
+    validVotes: event.validVotes,
+    invalidVotes: event.invalidVotes,
+    turnout: event.turnout,
+    candidates: { ...(event.candidates || {}) },
+    precincts,
+  };
 }
 
 function displayName(candidate) {
