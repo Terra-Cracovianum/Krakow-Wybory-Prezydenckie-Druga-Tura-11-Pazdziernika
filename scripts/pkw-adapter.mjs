@@ -9,7 +9,7 @@ import { buildResults } from "./pkw-results.mjs";
 export { buildResults };
 
 export const PKW_BLOB_URL = "https://wybory.gov.pl/wojtburmistrz_2024_2029/data/details/4485.blob";
-export const PKW_PAGE_URL = "https://wybory.gov.pl/wojtburmistrz_2024_2029/pl/wyniki/gm/4485";
+export const PKW_PAGE_URL = "https://wybory.gov.pl/wojtburmistrz_2024_2029/pl/4485/wyniki";
 
 // Candidate ids from the PKW committees in the same file (Kandydat.id).
 const PKW_CANDIDATE_IDS = {
