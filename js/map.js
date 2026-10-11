@@ -35,11 +35,48 @@ init().catch((error) => {
 const VISIT_BASE = "https://abacus.jasoncameron.dev/hit/terra-cracovianum.github.io/krakow-2-tura";
 
 // "result's are in.mp3" is the music under the map from the moment the page
-// opens. It is mastered at about −10 LUFS, so 0.35 lands near −19 LUFS:
-// clearly this song, still listenable for a long visit. It loops; the file
-// fades out, then the loop starts again. The mute choice is remembered.
+// opens, and the same track from the top when the winner animation starts.
+// It is mastered at about −10 LUFS, so 0.35 is the quiet bed and 0.7 is the
+// victory level: clearly this song. It loops; the file fades out, then the
+// loop starts again. The mute choice is remembered.
 const BED_VOLUME = 0.35;
+const VICTORY_VOLUME = 0.7;
 const BED_KEY = "krakow-2-tura-muzyka";
+
+function bedMuted() {
+  try {
+    return localStorage.getItem(BED_KEY) === "off";
+  } catch {
+    return false;
+  }
+}
+
+// Starts the victory song from the beginning. Browsers block sound until a
+// gesture, so a rejected play() waits for the next tap or key, including one
+// on the winner animation, and then starts there.
+function playVictory() {
+  const audio = document.querySelector("#bed");
+  if (!audio || bedMuted()) return;
+  audio.loop = true;
+  audio.muted = false;
+  audio.volume = VICTORY_VOLUME;
+  try {
+    audio.currentTime = 0;
+  } catch {
+    /* not seekable yet; play() still starts it */
+  }
+  const attempt = audio.play();
+  if (!attempt || !attempt.catch) return;
+  attempt.catch(() => {
+    const go = () => {
+      window.removeEventListener("pointerdown", go, true);
+      window.removeEventListener("keydown", go, true);
+      playVictory();
+    };
+    window.addEventListener("pointerdown", go, true);
+    window.addEventListener("keydown", go, true);
+  });
+}
 
 function startBed() {
   const audio = document.querySelector("#bed");
@@ -48,12 +85,7 @@ function startBed() {
   audio.loop = true;
   audio.volume = BED_VOLUME;
 
-  let muted = false;
-  try {
-    muted = localStorage.getItem(BED_KEY) === "off";
-  } catch {
-    muted = false;
-  }
+  let muted = bedMuted();
   audio.muted = muted;
 
   const paint = () => {
@@ -2007,6 +2039,7 @@ async function playWinner(candidate) {
   hideHoverCard();
   void win.offsetWidth;
   win.classList.add("is-playing");
+  playVictory();
   const close = document.querySelector("#win-close");
   close.onclick = closeWinner;
   close.focus({ preventScroll: true });
