@@ -1,10 +1,19 @@
 {
-  "status": "awaiting",
+  "status": "partial",
   "round": 2,
-  "updatedAt": "2026-09-28T12:00:00+02:00",
+  "updatedAt": "2026-10-11T19:24:13.000Z",
   "precinctsTotal": 454,
-  "precinctsReporting": 0,
-  "candidates": {},
+  "precinctsReporting": 1,
+  "eligible": 9,
+  "ballots": 9,
+  "validCards": 9,
+  "validVotes": 9,
+  "invalidVotes": 0,
+  "turnout": 100,
+  "candidates": {
+    "gibala": 7,
+    "piatkowska": 2
+  },
   "precincts": {
     "1": {
       "reported": false
@@ -1243,7 +1252,16 @@
       "reported": false
     },
     "413": {
-      "reported": false
+      "reported": true,
+      "eligible": 9,
+      "ballots": 9,
+      "validCards": 9,
+      "validVotes": 9,
+      "invalidVotes": 0,
+      "votes": {
+        "gibala": 7,
+        "piatkowska": 2
+      }
     },
     "414": {
       "reported": false
@@ -1368,5 +1386,8 @@
     "454": {
       "reported": false
     }
-  }
+  },
+  "source": "https://wybory.gov.pl/wojtburmistrz_2024_2029/data/details/4485.blob",
+  "page": "https://wybory.gov.pl/wojtburmistrz_2024_2029/pl/4485/wyniki",
+  "pkwFile": "20261011_WBP_Krakow_tura_2"
 }
