@@ -189,6 +189,16 @@ On a computer, the top right of the map has the progress card `#pkw-wait` (`rend
 
 `decidedWinner` names a winner early only when it is certain: the lead in votes is larger than every vote still possible in the commissions not counted yet. For each open commission the ceiling (`voteCeiling`) is its eligible voters (the PKW number when the results file carries it, otherwise the first round's, from `data/eligible-round1.json`), plus 10% and 50 more for voters added on the day with a certificate. For commissions 413–454 (hospitals, care homes, prisons), whose lists change from day to day, it is twice that number plus 50. When it holds, `#decided` shows “Zwycięzca rozstrzygnięty” with the winner and the numbers behind it, the race says “Rozstrzygnięte · {name}”, and the confetti plays once. When every commission is counted, the usual “Wygrywa” takes over.
 
+## Winner announcement
+
+`announceWinner` opens a full-screen broadcast-style sequence (`#win`, about six seconds) the first time a winner is certain: either `decidedWinner` holds, or the full count names a winner in `renderRunoff`. It never opens on a lead that could still change, never on `sample` data, and never while the history slider is replaying. It plays once per tab (`sessionStorage` key `krakow-2-tura-zwyciezca`) and replaces the small confetti burst. “Zobacz mapę wyników” or Escape closes it.
+
+The sequence: colour sweeps; the winner's share of the counted valid votes climbs to the 50% line and past it; the Kraków skyline rises (Pałac Wielopolskich, the mayor's seat; the Wawel cathedral towers; St Mary's); the portrait, the name, the “Prezydent/Prezydentka Krakowa” ribbon, a sentence, three figures and a running strip follow, with confetti from both corners. Pictures are in `img/zwyciezca/` (WebP, transparent). The surname shrinks to fit (`fitWinnerName`). Reduced motion shows the end state at once.
+
+Every figure comes from `data/results.json`. Before the full count the overlay says “Rozstrzygnięte”, gives the lead and the number of uncounted commissions, and says the count goes on and the figures will still change; the figures are “w policzonych” and “obwodów policzonych”. If a new count arrives while it is open, `fillWinner` updates the figures in place. After the full count it says “Wynik PKW”.
+
+The mockups made for this feature used invented numbers. They are not results and must never be published or committed. Nobody knows the final result until PKW counts it.
+
 ## Live updates
 
 The page fetches `data/results.json` every 30 seconds, and again when the tab comes back into view (`startPolling`, `refreshResults`). It redraws only when `updatedAt` or `precinctsReporting` changed. The race glides from the numbers on screen to the new ones, and an open station or district sheet is refreshed in place.
