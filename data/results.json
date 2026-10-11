@@ -1,18 +1,18 @@
 {
   "status": "partial",
   "round": 2,
-  "updatedAt": "2026-10-11T20:56:12.000Z",
+  "updatedAt": "2026-10-11T20:58:28.000Z",
   "precinctsTotal": 454,
-  "precinctsReporting": 366,
-  "eligible": 456835,
-  "ballots": 200385,
-  "validCards": 200424,
-  "validVotes": 198413,
-  "invalidVotes": 2011,
-  "turnout": 43.87,
+  "precinctsReporting": 372,
+  "eligible": 466430,
+  "ballots": 204619,
+  "validCards": 204661,
+  "validVotes": 202606,
+  "invalidVotes": 2055,
+  "turnout": 43.88,
   "candidates": {
-    "gibala": 124742,
-    "piatkowska": 73671
+    "gibala": 127179,
+    "piatkowska": 75427
   },
   "precincts": {
     "1": {
@@ -148,7 +148,16 @@
       "reported": false
     },
     "18": {
-      "reported": false
+      "reported": true,
+      "eligible": 933,
+      "ballots": 416,
+      "validCards": 417,
+      "validVotes": 415,
+      "invalidVotes": 2,
+      "votes": {
+        "gibala": 250,
+        "piatkowska": 165
+      }
     },
     "19": {
       "reported": true,
@@ -955,7 +964,16 @@
       "reported": false
     },
     "95": {
-      "reported": false
+      "reported": true,
+      "eligible": 1879,
+      "ballots": 859,
+      "validCards": 859,
+      "validVotes": 852,
+      "invalidVotes": 7,
+      "votes": {
+        "gibala": 525,
+        "piatkowska": 327
+      }
     },
     "96": {
       "reported": false
@@ -1099,7 +1117,16 @@
       }
     },
     "110": {
-      "reported": false
+      "reported": true,
+      "eligible": 2364,
+      "ballots": 974,
+      "validCards": 974,
+      "validVotes": 960,
+      "invalidVotes": 14,
+      "votes": {
+        "gibala": 565,
+        "piatkowska": 395
+      }
     },
     "111": {
       "reported": true,
@@ -1168,7 +1195,16 @@
       "reported": false
     },
     "118": {
-      "reported": false
+      "reported": true,
+      "eligible": 1439,
+      "ballots": 673,
+      "validCards": 675,
+      "validVotes": 670,
+      "invalidVotes": 5,
+      "votes": {
+        "gibala": 358,
+        "piatkowska": 312
+      }
     },
     "119": {
       "reported": true,
@@ -1477,7 +1513,16 @@
       }
     },
     "158": {
-      "reported": false
+      "reported": true,
+      "eligible": 1138,
+      "ballots": 503,
+      "validCards": 503,
+      "validVotes": 496,
+      "invalidVotes": 7,
+      "votes": {
+        "gibala": 255,
+        "piatkowska": 241
+      }
     },
     "159": {
       "reported": true,
@@ -1654,7 +1699,16 @@
       }
     },
     "175": {
-      "reported": false
+      "reported": true,
+      "eligible": 1842,
+      "ballots": 809,
+      "validCards": 809,
+      "validVotes": 800,
+      "invalidVotes": 9,
+      "votes": {
+        "gibala": 484,
+        "piatkowska": 316
+      }
     },
     "176": {
       "reported": true,
