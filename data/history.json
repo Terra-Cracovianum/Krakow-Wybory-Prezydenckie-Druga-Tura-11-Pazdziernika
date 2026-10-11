@@ -13251,6 +13251,388 @@
           }
         }
       ]
+    },
+    {
+      "at": "2026-10-11T21:02:29.000Z",
+      "precinctsReporting": 393,
+      "precinctsTotal": 454,
+      "percent": 86.56,
+      "eligible": 497639,
+      "ballots": 218782,
+      "validCards": 218825,
+      "validVotes": 216647,
+      "invalidVotes": 2178,
+      "turnout": 43.97,
+      "candidates": {
+        "gibala": 135407,
+        "piatkowska": 81240
+      },
+      "shares": {
+        "gibala": 62.5,
+        "piatkowska": 37.5
+      },
+      "districts": [
+        {
+          "dzielnica": "Dzielnica I",
+          "precincts": 23,
+          "reporting": 16,
+          "validVotes": 6739,
+          "votes": {
+            "gibala": 3648,
+            "piatkowska": 3091
+          }
+        },
+        {
+          "dzielnica": "Dzielnica II",
+          "precincts": 18,
+          "reporting": 18,
+          "validVotes": 10872,
+          "votes": {
+            "gibala": 6135,
+            "piatkowska": 4737
+          }
+        },
+        {
+          "dzielnica": "Dzielnica III",
+          "precincts": 27,
+          "reporting": 24,
+          "validVotes": 14281,
+          "votes": {
+            "gibala": 8637,
+            "piatkowska": 5644
+          }
+        },
+        {
+          "dzielnica": "Dzielnica IV",
+          "precincts": 38,
+          "reporting": 30,
+          "validVotes": 19826,
+          "votes": {
+            "gibala": 11961,
+            "piatkowska": 7865
+          }
+        },
+        {
+          "dzielnica": "Dzielnica V",
+          "precincts": 19,
+          "reporting": 15,
+          "validVotes": 9147,
+          "votes": {
+            "gibala": 5116,
+            "piatkowska": 4031
+          }
+        },
+        {
+          "dzielnica": "Dzielnica VI",
+          "precincts": 14,
+          "reporting": 8,
+          "validVotes": 5639,
+          "votes": {
+            "gibala": 3095,
+            "piatkowska": 2544
+          }
+        },
+        {
+          "dzielnica": "Dzielnica VII",
+          "precincts": 11,
+          "reporting": 6,
+          "validVotes": 4021,
+          "votes": {
+            "gibala": 2176,
+            "piatkowska": 1845
+          }
+        },
+        {
+          "dzielnica": "Dzielnica VIII",
+          "precincts": 37,
+          "reporting": 34,
+          "validVotes": 21809,
+          "votes": {
+            "gibala": 12887,
+            "piatkowska": 8922
+          }
+        },
+        {
+          "dzielnica": "Dzielnica IX",
+          "precincts": 9,
+          "reporting": 4,
+          "validVotes": 2731,
+          "votes": {
+            "gibala": 1653,
+            "piatkowska": 1078
+          }
+        },
+        {
+          "dzielnica": "Dzielnica X",
+          "precincts": 16,
+          "reporting": 12,
+          "validVotes": 7410,
+          "votes": {
+            "gibala": 4650,
+            "piatkowska": 2760
+          }
+        },
+        {
+          "dzielnica": "Dzielnica XI",
+          "precincts": 28,
+          "reporting": 26,
+          "validVotes": 18548,
+          "votes": {
+            "gibala": 11576,
+            "piatkowska": 6972
+          }
+        },
+        {
+          "dzielnica": "Dzielnica XII",
+          "precincts": 35,
+          "reporting": 34,
+          "validVotes": 21969,
+          "votes": {
+            "gibala": 14392,
+            "piatkowska": 7577
+          }
+        },
+        {
+          "dzielnica": "Dzielnica XIII",
+          "precincts": 22,
+          "reporting": 20,
+          "validVotes": 13697,
+          "votes": {
+            "gibala": 8509,
+            "piatkowska": 5188
+          }
+        },
+        {
+          "dzielnica": "Dzielnica XIV",
+          "precincts": 18,
+          "reporting": 16,
+          "validVotes": 11159,
+          "votes": {
+            "gibala": 7063,
+            "piatkowska": 4096
+          }
+        },
+        {
+          "dzielnica": "Dzielnica XV",
+          "precincts": 26,
+          "reporting": 24,
+          "validVotes": 16694,
+          "votes": {
+            "gibala": 11318,
+            "piatkowska": 5376
+          }
+        },
+        {
+          "dzielnica": "Dzielnica XVI",
+          "precincts": 24,
+          "reporting": 22,
+          "validVotes": 10740,
+          "votes": {
+            "gibala": 7724,
+            "piatkowska": 3016
+          }
+        },
+        {
+          "dzielnica": "Dzielnica XVII",
+          "precincts": 12,
+          "reporting": 10,
+          "validVotes": 5103,
+          "votes": {
+            "gibala": 3617,
+            "piatkowska": 1486
+          }
+        },
+        {
+          "dzielnica": "Dzielnica XVIII",
+          "precincts": 35,
+          "reporting": 34,
+          "validVotes": 15222,
+          "votes": {
+            "gibala": 10557,
+            "piatkowska": 4665
+          }
+        },
+        {
+          "dzielnica": "Obwody specjalne",
+          "precincts": 42,
+          "reporting": 40,
+          "validVotes": 1040,
+          "votes": {
+            "gibala": 693,
+            "piatkowska": 347
+          }
+        }
+      ],
+      "added": [
+        {
+          "nr": 17,
+          "eligible": 1187,
+          "ballots": 548,
+          "validCards": 548,
+          "validVotes": 541,
+          "invalidVotes": 7,
+          "votes": {
+            "gibala": 276,
+            "piatkowska": 265
+          }
+        },
+        {
+          "nr": 58,
+          "eligible": 2076,
+          "ballots": 940,
+          "validCards": 940,
+          "validVotes": 931,
+          "invalidVotes": 9,
+          "votes": {
+            "gibala": 577,
+            "piatkowska": 354
+          }
+        },
+        {
+          "nr": 76,
+          "eligible": 1473,
+          "ballots": 675,
+          "validCards": 675,
+          "validVotes": 674,
+          "invalidVotes": 1,
+          "votes": {
+            "gibala": 390,
+            "piatkowska": 284
+          }
+        },
+        {
+          "nr": 120,
+          "eligible": 1141,
+          "ballots": 558,
+          "validCards": 558,
+          "validVotes": 553,
+          "invalidVotes": 5,
+          "votes": {
+            "gibala": 277,
+            "piatkowska": 276
+          }
+        },
+        {
+          "nr": 130,
+          "eligible": 1552,
+          "ballots": 769,
+          "validCards": 769,
+          "validVotes": 765,
+          "invalidVotes": 4,
+          "votes": {
+            "gibala": 373,
+            "piatkowska": 392
+          }
+        },
+        {
+          "nr": 138,
+          "eligible": 1371,
+          "ballots": 604,
+          "validCards": 605,
+          "validVotes": 599,
+          "invalidVotes": 6,
+          "votes": {
+            "gibala": 421,
+            "piatkowska": 178
+          }
+        },
+        {
+          "nr": 141,
+          "eligible": 952,
+          "ballots": 512,
+          "validCards": 512,
+          "validVotes": 505,
+          "invalidVotes": 7,
+          "votes": {
+            "gibala": 275,
+            "piatkowska": 230
+          }
+        },
+        {
+          "nr": 172,
+          "eligible": 1707,
+          "ballots": 751,
+          "validCards": 750,
+          "validVotes": 746,
+          "invalidVotes": 4,
+          "votes": {
+            "gibala": 367,
+            "piatkowska": 379
+          }
+        },
+        {
+          "nr": 190,
+          "eligible": 1668,
+          "ballots": 788,
+          "validCards": 788,
+          "validVotes": 781,
+          "invalidVotes": 7,
+          "votes": {
+            "gibala": 440,
+            "piatkowska": 341
+          }
+        },
+        {
+          "nr": 202,
+          "eligible": 2009,
+          "ballots": 1012,
+          "validCards": 1011,
+          "validVotes": 1006,
+          "invalidVotes": 5,
+          "votes": {
+            "gibala": 583,
+            "piatkowska": 423
+          }
+        },
+        {
+          "nr": 203,
+          "eligible": 1398,
+          "ballots": 615,
+          "validCards": 615,
+          "validVotes": 613,
+          "invalidVotes": 2,
+          "votes": {
+            "gibala": 409,
+            "piatkowska": 204
+          }
+        },
+        {
+          "nr": 215,
+          "eligible": 1523,
+          "ballots": 651,
+          "validCards": 651,
+          "validVotes": 640,
+          "invalidVotes": 11,
+          "votes": {
+            "gibala": 395,
+            "piatkowska": 245
+          }
+        },
+        {
+          "nr": 318,
+          "eligible": 1689,
+          "ballots": 765,
+          "validCards": 765,
+          "validVotes": 759,
+          "invalidVotes": 6,
+          "votes": {
+            "gibala": 548,
+            "piatkowska": 211
+          }
+        },
+        {
+          "nr": 362,
+          "eligible": 1411,
+          "ballots": 542,
+          "validCards": 542,
+          "validVotes": 537,
+          "invalidVotes": 5,
+          "votes": {
+            "gibala": 366,
+            "piatkowska": 171
+          }
+        }
+      ]
     }
   ]
 }
