@@ -2237,3 +2237,267 @@ html.is-compact .legend-notes { display: none; }
 
   .result-table .nums em { min-width: 0; font-size: 0.72rem; }
 }
+
+/* ---------------------------------------------------------------------------
+   Winner announcement (#win). Full-screen, shown once per tab when
+   decidedWinner() is certain or the full count names a winner. Always dark,
+   in both themes, like a broadcast graphic. Every class starts with "win-".
+   ------------------------------------------------------------------------ */
+.win {
+  --c: #1f6fe0;
+  --win-bg: #060a14;
+  --win-muted: rgba(255, 255, 255, 0.66);
+  --gold: #f4c95d;
+  position: fixed; inset: 0; z-index: 1000; overflow: hidden; isolation: isolate;
+  color: #fff; font-family: -apple-system, "SF Pro Display", "Inter Display", Inter, system-ui, sans-serif;
+  background:
+    radial-gradient(120% 90% at 78% 30%, color-mix(in srgb, var(--c) 42%, transparent) 0%, transparent 58%),
+    radial-gradient(90% 70% at 10% 100%, color-mix(in srgb, var(--c) 22%, transparent) 0%, transparent 60%),
+    var(--win-bg);
+  opacity: 0;
+}
+.win[hidden] { display: none; }
+.win.is-playing { animation: win-fade-in .35s ease-out forwards; }
+.win.is-leaving { animation: win-fade-out .35s ease-in forwards; }
+.win::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(80% 80% at 60% 40%, #000 30%, transparent 85%);
+}
+
+.win-sweep { position: absolute; inset: -20% -40%; z-index: 6; pointer-events: none; }
+.win-sweep i {
+  position: absolute; top: 0; bottom: 0; width: 34%;
+  background: linear-gradient(90deg, transparent, var(--c) 30%, color-mix(in srgb, var(--c) 55%, #fff) 50%, var(--c) 70%, transparent);
+  transform: skewX(-18deg) translateX(-120vw); opacity: .95;
+}
+.win-sweep i:nth-child(2) { width: 12%; background: var(--gold); opacity: .9; }
+.is-playing .win-sweep i { animation: win-sweep .85s cubic-bezier(.7, 0, .3, 1) .1s forwards; }
+.is-playing .win-sweep i:nth-child(2) { animation-delay: .22s; animation-duration: .8s; }
+
+/* Scene 1: the share of counted votes passes 50% */
+.win-threshold {
+  position: absolute; z-index: 5; left: 50%; top: 50%; width: min(1040px, 84vw);
+  transform: translate(-50%, -50%); opacity: 0; text-align: center;
+}
+.is-playing .win-threshold { animation: win-t-in .45s ease-out .55s forwards, win-t-out .5s cubic-bezier(.6, 0, .4, 1) 2.55s forwards; }
+.win-t-name { font-size: clamp(15px, 1.6vw, 20px); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--win-muted); margin: 0 0 6px; }
+.win-t-pct {
+  font-size: clamp(76px, 13vw, 184px); font-weight: 800; letter-spacing: -.045em; line-height: .95;
+  font-variant-numeric: tabular-nums; margin: 0 0 40px;
+}
+.win-t-track {
+  position: relative; height: clamp(18px, 2.2vw, 28px); border-radius: 999px;
+  background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, .07) 0 6px, rgba(255, 255, 255, .03) 6px 12px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1);
+}
+.win-t-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 70%, #000), var(--c) 70%, color-mix(in srgb, var(--c) 60%, #fff));
+  box-shadow: 0 0 32px color-mix(in srgb, var(--c) 70%, transparent);
+}
+.win-t-line {
+  position: absolute; left: 50%; top: -22px; bottom: -22px; width: 3px; margin-left: -1.5px;
+  background: rgba(255, 255, 255, .75); border-radius: 2px; transition: background .2s, box-shadow .2s;
+}
+.win-t-line::after {
+  content: "50%"; position: absolute; left: 50%; top: calc(100% + 8px); transform: translateX(-50%);
+  font-size: 14px; font-weight: 700; letter-spacing: .04em; color: var(--win-muted);
+}
+.win-threshold.is-crossed .win-t-line { background: var(--gold); box-shadow: 0 0 24px var(--gold), 0 0 60px var(--gold); }
+.win-threshold.is-crossed .win-t-line::after { color: var(--gold); }
+.win-t-ring {
+  position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px;
+  border-radius: 50%; border: 3px solid var(--gold); opacity: 0;
+}
+.win-threshold.is-crossed .win-t-ring { animation: win-ring .9s ease-out forwards; }
+.win-threshold.is-crossed .win-t-ring + .win-t-ring { animation-delay: .12s; }
+.win-t-note {
+  margin: 44px 0 0; font-size: clamp(13px, 1.3vw, 16px); font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--gold); opacity: 0; transform: translateY(8px); transition: opacity .3s, transform .3s;
+}
+.win-threshold.is-crossed .win-t-note { opacity: 1; transform: none; }
+
+/* Scene 2: Kraków */
+.win-skyline { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.win-skyline img {
+  position: absolute; bottom: 0; opacity: 0;
+  filter: brightness(.62) saturate(.75) contrast(1.05);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+}
+.win-skyline .win-palac { left: 50%; width: min(1500px, 92vw); transform: translate(-50%, 60px); filter: brightness(.38) saturate(.5); }
+.win-skyline .win-wawel { left: 1vw; height: 64vh; transform: translateY(80px); }
+.win-skyline .win-mariacki { right: 30vw; height: 72vh; transform: translateY(100px); }
+.is-playing .win-palac { animation: win-rise-c 1.6s cubic-bezier(.2, .8, .2, 1) 2.65s forwards; }
+.is-playing .win-wawel { animation: win-rise 1.6s cubic-bezier(.2, .8, .2, 1) 2.8s forwards; }
+.is-playing .win-mariacki { animation: win-rise 1.6s cubic-bezier(.2, .8, .2, 1) 2.95s forwards; }
+.win-skyline::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(to top, var(--win-bg) 0%, color-mix(in srgb, var(--win-bg) 70%, transparent) 18%, transparent 45%),
+    linear-gradient(90deg, color-mix(in srgb, var(--win-bg) 85%, transparent) 0%, transparent 55%);
+}
+
+.win-portrait {
+  position: absolute; z-index: 2; right: 2vw; bottom: 0; height: 92vh; max-width: 56vw;
+  display: flex; align-items: flex-end; justify-content: flex-end;
+  opacity: 0; transform: translateY(40px) scale(1.04); transform-origin: bottom center;
+  clip-path: inset(100% -40% 0 -40%);
+}
+.win-portrait img {
+  height: 100%; width: auto; max-width: 100%; object-fit: contain; object-position: bottom right;
+  mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
+}
+.win-portrait::before {
+  content: ""; position: absolute; z-index: -1; right: 10%; top: 4%; width: 70%; aspect-ratio: 1;
+  border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--c) 70%, transparent), transparent);
+  filter: blur(20px);
+}
+.is-playing .win-portrait { animation: win-portrait-in 1.1s cubic-bezier(.2, .8, .2, 1) 2.9s forwards; }
+
+.win-copy {
+  position: absolute; z-index: 4; left: 6vw; top: 50%; transform: translateY(-54%);
+  width: min(720px, 56vw);
+}
+.win-kicker {
+  display: inline-flex; align-items: center; gap: 10px; padding: 9px 16px 9px 10px; border-radius: 999px;
+  background: var(--gold); color: #1a1205; font-weight: 800; font-size: clamp(12px, 1.1vw, 14px);
+  letter-spacing: .2em; text-transform: uppercase; opacity: 0; transform: translateX(-24px);
+}
+.win-kicker svg { width: 20px; height: 20px; padding: 3px; border-radius: 50%; background: #1a1205; color: var(--gold); }
+.is-playing .win-kicker { animation: win-slide-in .5s cubic-bezier(.2, .8, .2, 1) 3.1s forwards; }
+
+.win-name { margin: 22px 0 0; line-height: .9; }
+.win-name > span { display: block; overflow: hidden; padding-bottom: .06em; }
+.win-name b { display: block; transform: translateY(110%); }
+.win-first b { font-size: clamp(30px, 4.2vw, 64px); font-weight: 500; letter-spacing: -.02em; color: rgba(255, 255, 255, .88); }
+.win-last b {
+  font-size: clamp(64px, 10.5vw, 168px); font-weight: 900; letter-spacing: -.05em; white-space: nowrap;
+  background: linear-gradient(100deg, #fff 0%, #fff 40%, var(--gold) 50%, #fff 60%, #fff 100%);
+  background-size: 300% 100%; background-position: 100% 0;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.is-playing .win-first b { animation: win-line-up .7s cubic-bezier(.2, .8, .2, 1) 3.25s forwards; }
+.is-playing .win-last b { animation: win-line-up .8s cubic-bezier(.2, .8, .2, 1) 3.4s forwards, win-glint 1.4s ease-in-out 5.2s forwards; }
+
+.win-ribbon {
+  position: relative; display: inline-flex; align-items: center; gap: 14px; margin-top: 18px;
+  padding: 14px 26px 14px 22px; background: var(--c);
+  font-weight: 800; font-size: clamp(16px, 2vw, 28px); letter-spacing: .08em; text-transform: uppercase;
+  clip-path: inset(0 100% 0 0); box-shadow: 0 18px 48px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.win-ribbon::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--gold); }
+.is-playing .win-ribbon { animation: win-wipe .7s cubic-bezier(.7, 0, .2, 1) 3.85s forwards; }
+
+.win-line { margin: 22px 0 0; font-size: clamp(15px, 1.45vw, 20px); line-height: 1.4; color: var(--win-muted); max-width: 34em; opacity: 0; }
+.win-line b { color: #fff; }
+.is-playing .win-line { animation: win-fade-up .6s ease-out 4.25s forwards; }
+
+.win-stats { display: flex; gap: clamp(18px, 3vw, 44px); margin-top: 26px; opacity: 0; }
+.win-stats div { display: grid; gap: 4px; }
+.win-stats strong { font-size: clamp(24px, 2.6vw, 40px); font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.win-stats span { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--win-muted); }
+.win-stats div:first-child strong { color: var(--gold); }
+.is-playing .win-stats { animation: win-fade-up .6s ease-out 4.45s forwards; }
+
+.win-strip {
+  position: absolute; z-index: 7; left: 0; right: 0; bottom: 0; height: 48px;
+  display: flex; align-items: stretch; background: rgba(4, 7, 14, .88); border-top: 1px solid rgba(255, 255, 255, .1);
+  transform: translateY(100%);
+}
+.win-strip-tag {
+  flex: none; display: flex; align-items: center; gap: 8px; padding: 0 18px; background: var(--c);
+  font-weight: 800; font-size: 13px; letter-spacing: .16em; text-transform: uppercase;
+}
+.win-strip-tag::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: win-blink 1.2s infinite; }
+.win-strip-run { flex: 1; overflow: hidden; display: flex; align-items: center; mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+.win-strip-run p { margin: 0; white-space: nowrap; font-size: 14px; font-weight: 600; letter-spacing: .06em; color: rgba(255, 255, 255, .85); animation: win-run 40s linear infinite; padding-left: 100%; }
+.win-strip-run p i { font-style: normal; color: var(--gold); margin: 0 18px; }
+.is-playing .win-strip { animation: win-strip-in .5s cubic-bezier(.2, .8, .2, 1) 4.6s forwards; }
+
+.win-close {
+  position: absolute; z-index: 8; right: 20px; bottom: 64px;
+  font: 600 14px/1 var(--font); color: #fff; padding: 12px 18px; border-radius: 999px; cursor: pointer;
+  background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .22); backdrop-filter: blur(12px);
+  opacity: 0;
+}
+.win-close:hover { background: rgba(255, 255, 255, .2); }
+.is-playing .win-close { animation: win-fade-in .5s ease-out 1.2s forwards; }
+
+.win-brand { position: absolute; z-index: 8; left: 6vw; top: 28px; margin: 0; display: flex; gap: 10px; align-items: center; font-size: 12px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--win-muted); opacity: 0; }
+.win-brand i { width: 22px; height: 2px; background: var(--c); }
+.is-playing .win-brand { animation: win-fade-in .5s ease-out 3s forwards; }
+
+.win-confetti { position: absolute; inset: 0; z-index: 7; pointer-events: none; width: 100%; height: 100%; }
+
+@keyframes win-fade-in { to { opacity: 1; } }
+@keyframes win-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes win-fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes win-sweep { to { transform: skewX(-18deg) translateX(180vw); } }
+@keyframes win-t-in { from { opacity: 0; transform: translate(-50%, -46%) scale(.97); } to { opacity: 1; transform: translate(-50%, -50%); } }
+@keyframes win-t-out { to { opacity: 0; transform: translate(-50%, -62%) scale(.92); filter: blur(6px); } }
+@keyframes win-ring { 0% { opacity: 1; transform: scale(.4); } 100% { opacity: 0; transform: scale(9); } }
+@keyframes win-rise { to { opacity: 1; transform: translateY(0); } }
+@keyframes win-rise-c { to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes win-portrait-in { 0% { opacity: 0; clip-path: inset(100% -40% 0 -40%); } 30% { opacity: 1; } 100% { opacity: 1; transform: none; clip-path: inset(-40% -40% 0 -40%); } }
+@keyframes win-slide-in { to { opacity: 1; transform: none; } }
+@keyframes win-line-up { to { transform: none; } }
+@keyframes win-glint { to { background-position: 0 0; } }
+@keyframes win-wipe { to { clip-path: inset(0 0 0 0); } }
+@keyframes win-strip-in { to { transform: none; } }
+@keyframes win-run { to { transform: translateX(-100%); } }
+@keyframes win-blink { 50% { opacity: .25; } }
+
+@media (max-width: 860px) and (orientation: portrait) {
+  .win-portrait { right: 50%; transform: translate(50%, 30px) scale(1.04); height: 50vh; max-width: 100vw; bottom: auto; top: 6vh; justify-content: center; }
+  .win-portrait img { object-position: bottom center; mask-image: linear-gradient(to bottom, #000 70%, transparent 100%); }
+  @keyframes win-portrait-in { 0% { opacity: 0; clip-path: inset(100% -40% 0 -40%); } 30% { opacity: 1; } 100% { opacity: 1; transform: translate(50%, 0); clip-path: inset(-40% -40% 0 -40%); } }
+  .win-copy { left: 20px; right: 20px; width: auto; top: auto; bottom: 60px; transform: none; text-align: center; }
+  .win-name { margin-top: 14px; }
+  .win-first b { font-size: 26px; }
+  .win-last b { font-size: min(15vw, 80px); }
+  .win-ribbon { margin-top: 10px; padding: 11px 18px 11px 20px; font-size: 16px; }
+  .win-line { font-size: 13px; margin: 12px auto 0; }
+  .win-stats { justify-content: center; gap: 20px; margin-top: 14px; }
+  .win-stats strong { font-size: 22px; }
+  .win-stats span { font-size: 10px; }
+  .win-skyline img { mask-image: linear-gradient(to bottom, #000 75%, transparent 100%); filter: brightness(.36) saturate(.55) contrast(1.05); }
+  .win-skyline .win-wawel { height: 30vh; left: -12vw; bottom: 44vh; }
+  .win-skyline .win-mariacki { height: 34vh; right: -10vw; bottom: 44vh; }
+  .win-skyline .win-palac { width: 180vw; bottom: 43vh; filter: brightness(.3) saturate(.5); }
+  .win-skyline::after { background: linear-gradient(to top, var(--win-bg) 0%, var(--win-bg) 44%, color-mix(in srgb, var(--win-bg) 40%, transparent) 50%, transparent 58%); }
+  .win-brand { display: none; }
+  .win-close { right: 14px; bottom: auto; top: calc(14px + env(safe-area-inset-top)); padding: 9px 14px; font-size: 13px; }
+  .win-strip { height: 40px; }
+  .win-strip-tag { padding: 0 12px; font-size: 11px; }
+  .win-strip-run p { font-size: 12px; }
+  .win-t-note { margin-top: 40px; letter-spacing: .14em; }
+}
+
+/* A phone on its side: smaller type, so the column fits the short screen. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .win-copy { top: 46%; }
+  .win-name { margin-top: 10px; }
+  .win-last b { font-size: min(9vw, 15vh); }
+  .win-first b { font-size: min(4vw, 7vh); }
+  .win-ribbon { margin-top: 8px; padding: 8px 16px; font-size: 14px; }
+  .win-line { margin-top: 10px; font-size: 12px; }
+  .win-stats { margin-top: 10px; }
+  .win-stats strong { font-size: 18px; }
+  .win-stats span { font-size: 9px; }
+  .win-brand { top: 12px; }
+  .win-strip { height: 36px; }
+  .win-close { bottom: 48px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .win.is-playing, .win.is-playing *, .win.is-leaving { animation-duration: .01s !important; animation-delay: 0s !important; }
+  .win-threshold { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .win-strip-run p { animation: none; padding-left: 16px; }
+}

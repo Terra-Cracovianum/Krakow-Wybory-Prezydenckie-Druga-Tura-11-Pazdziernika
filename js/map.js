@@ -254,6 +254,10 @@ async function init() {
       query.focus();
     }
     if (event.key === "Escape") {
+      if (winOpen) {
+        closeWinner();
+        return;
+      }
       const menu = document.querySelector("#district-menu");
       if (state.view === "districts" && menu && !menu.hidden) {
         menu.hidden = true;
@@ -1438,7 +1442,7 @@ function renderRunoff() {
     .map((row, index) => runoffPlace(row, index + 1, valid))
     .join("");
   renderTicker(shown, elected);
-  if (elected) celebrateCount(shown.slice(0, 1));
+  if (elected) announceWinner(leader.candidate);
 }
 
 function electedWord(candidate) {
@@ -1805,8 +1809,333 @@ function renderDecided() {
       <strong>${escapeHtml(winner.name)}</strong>
       <span>Przewaga ${formatCount(lead)} ${voteNoun(lead)} jest większa niż wszystkie głosy możliwe jeszcze w ${formatCount(open)} ${open === 1 ? "niepoliczonym obwodzie" : "niepoliczonych obwodach"} (najwyżej ${formatCount(remaining)}).</span>
     </span>`;
-  celebrateCount([{ candidate: winner }]);
+  announceWinner(winner);
 }
+
+// The winner announcement (#win): a full-screen sequence, once per tab, when
+// decidedWinner is certain or the full count names a winner. Every number in
+// it comes from data/results.json. While the count goes on it says so, and
+// the figures update in place if a new count arrives while it is open.
+const WIN_SEEN = "krakow-2-tura-zwyciezca";
+let winOpen = false;
+let winShown = false;
+let winTimers = [];
+let winReturnFocus = null;
+
+function announceWinner(candidate) {
+  if (state.replay || state.results.sample) return;
+  if (winOpen) {
+    fillWinner(candidate);
+    return;
+  }
+  if (winShown) return;
+  winShown = true;
+  try {
+    if (sessionStorage.getItem(WIN_SEEN)) return;
+    sessionStorage.setItem(WIN_SEEN, "1");
+    // The overlay has its own confetti; the small burst stays quiet.
+    sessionStorage.setItem("krakow-wybory-2-tura-confetti", "1");
+  } catch {
+    celebrateCount([{ candidate }]);
+    return;
+  }
+  playWinner(candidate);
+}
+
+function winnerFigures(candidate) {
+  const results = state.results;
+  const [first, second] = state.candidates;
+  const other = candidate.id === first.id ? second : first;
+  const votes = results.candidates[candidate.id];
+  const otherVotes = results.candidates[other.id];
+  const valid = results.validVotes;
+  const total = results.precinctsTotal;
+  const reported = results.precinctsReporting;
+  return {
+    other,
+    votes,
+    otherVotes,
+    valid,
+    total,
+    reported,
+    complete: reported >= total,
+    share: valid > 0 ? (100 * votes) / valid : 0,
+    decided: decidedWinner(results),
+  };
+}
+
+function fillWinner(candidate) {
+  const f = winnerFigures(candidate);
+  const win = document.querySelector("#win");
+  const [firstName, ...rest] = displayName(candidate).split(" ");
+  win.style.setProperty("--c", candidate.color);
+  document.querySelector("#win-first").textContent = firstName;
+  document.querySelector("#win-last").textContent = rest.join(" ");
+  document.querySelector("#win-kicker").textContent = f.complete ? "Wynik PKW" : "Rozstrzygnięte";
+  document.querySelector("#win-ribbon").textContent = `${electedWord(candidate)} Krakowa`;
+  document.querySelector("#win-t-name").textContent = displayName(candidate);
+  document.querySelector("#win-t-note").textContent = f.complete
+    ? "Ponad 50% ważnych głosów"
+    : "Ponad 50% policzonych głosów";
+  const line = document.querySelector("#win-line");
+  if (f.complete) {
+    line.innerHTML = `Policzono wszystkie ${numberFormat.format(f.total)} ${obwodNoun(f.total)}. ${candidate.feminine ? "Zdobyła" : "Zdobył"} więcej ważnych głosów niż ${escapeHtml(f.other.short)}.`;
+  } else if (f.decided) {
+    const { lead, open } = f.decided;
+    line.innerHTML = `Przewaga <b>${formatCount(lead)} ${voteNoun(lead)}</b> jest większa niż wszystkie głosy możliwe jeszcze w ${formatCount(open)} ${open === 1 ? "niepoliczonym obwodzie" : "niepoliczonych obwodach"}. <b>Liczenie trwa</b>, więc liczby poniżej jeszcze się zmienią.`;
+  }
+  const stats = f.complete
+    ? [
+        [f.share, "pct", "ważnych głosów"],
+        [f.votes, "n", voteNoun(f.votes)],
+        [(100 * Math.abs(f.votes - f.otherVotes)) / f.valid, "pts", "pkt przewagi"],
+      ]
+    : [
+        [f.share, "pct", "w policzonych"],
+        [f.votes, "n", `${voteNoun(f.votes)} do tej pory`],
+        [f.reported, "of", "obwodów policzonych"],
+      ];
+  const box = document.querySelector("#win-stats");
+  const counting = win.classList.contains("is-counting");
+  box.innerHTML = stats
+    .map(([value, kind, label]) => `<div><strong data-to="${value}" data-kind="${kind}">${counting ? "0" : winStat(value, kind, f)}</strong><span>${escapeHtml(label)}</span></div>`)
+    .join("");
+  const dot = "<i>●</i>";
+  const parts = f.complete
+    ? [
+        `${electedWord(candidate)} Krakowa: ${escapeHtml(candidate.name)}`,
+        `${formatPercent(f.share)} ważnych głosów`,
+        `${escapeHtml(f.other.short)}: ${formatPercent(100 - f.share)}`,
+        `Policzono ${numberFormat.format(f.total)} z ${numberFormat.format(f.total)} obwodów`,
+      ]
+    : [
+        `${escapeHtml(candidate.name)}: zwycięstwo rozstrzygnięte`,
+        `${formatPercent(f.share)} głosów w ${numberFormat.format(f.reported)} z ${numberFormat.format(f.total)} obwodów`,
+        "Liczenie trwa, liczby jeszcze się zmienią",
+      ];
+  parts.push("Druga tura, 11 października 2026", "Dane: PKW, wybory.gov.pl");
+  const run = parts.map((part) => `${part} ${dot}`).join(" ");
+  document.querySelector("#win-strip-text").innerHTML = `${run} ${run}`;
+  fitWinnerName();
+}
+
+function winStat(value, kind, f) {
+  if (kind === "pct") return formatPercent(value);
+  if (kind === "pts") return `+${formatPoints(value).replace(" pkt", "")}`;
+  if (kind === "of") return `${numberFormat.format(Math.round(value))} / ${numberFormat.format(f.total)}`;
+  return formatCount(Math.round(value));
+}
+
+// Long surnames (Piątkowska) shrink until they fit the column.
+function fitWinnerName() {
+  const name = document.querySelector("#win-last");
+  name.style.fontSize = "";
+  let size = parseFloat(getComputedStyle(name).fontSize);
+  while (name.scrollWidth > name.clientWidth + 1 && size > 28) {
+    size -= 2;
+    name.style.fontSize = `${size}px`;
+  }
+}
+
+function countWinnerStats(f, duration) {
+  const nodes = [...document.querySelectorAll("#win-stats [data-to]")];
+  const start = performance.now();
+  const tick = (now) => {
+    const k = duration ? Math.min(1, (now - start) / duration) : 1;
+    const eased = 1 - Math.pow(1 - k, 4);
+    for (const node of nodes) node.textContent = winStat(Number(node.dataset.to) * (k < 1 ? eased : 1), node.dataset.kind, f);
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+async function playWinner(candidate) {
+  const win = document.querySelector("#win");
+  const photo = document.querySelector("#win-photo");
+  photo.src = `img/zwyciezca/${candidate.id}.webp`;
+  const images = [photo, ...win.querySelectorAll("img[data-src]")];
+  win.querySelectorAll("img[data-src]").forEach((img) => {
+    img.src = img.dataset.src;
+    img.removeAttribute("data-src");
+  });
+  // Start once the pictures are ready, or after two seconds regardless.
+  await Promise.race([
+    Promise.all(images.map((img) => (img.decode ? img.decode().catch(() => {}) : null))),
+    new Promise((resolve) => window.setTimeout(resolve, 2000)),
+  ]);
+
+  winOpen = true;
+  winReturnFocus = document.activeElement;
+  win.hidden = false;
+  win.classList.remove("is-leaving");
+  win.classList.add("is-counting");
+  fillWinner(candidate);
+  const f = winnerFigures(candidate);
+  hideHoverCard();
+  void win.offsetWidth;
+  win.classList.add("is-playing");
+  const close = document.querySelector("#win-close");
+  close.onclick = closeWinner;
+  close.focus({ preventScroll: true });
+
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) {
+    win.classList.remove("is-counting");
+    countWinnerStats(f, 0);
+    return;
+  }
+  // The counted share climbs to 50%, crosses the line, then settles on the
+  // real figure. It is always above 50% here: the winner has more of the
+  // two candidates' valid votes.
+  const threshold = document.querySelector("#win-threshold");
+  const fill = document.querySelector("#win-t-fill");
+  const label = document.querySelector("#win-t-pct");
+  threshold.classList.remove("is-crossed");
+  const startAt = performance.now() + 750;
+  const toHalf = 1150;
+  const toShare = 650;
+  const step = (now) => {
+    if (!winOpen) return;
+    const t = now - startAt;
+    let value = 0;
+    if (t > 0 && t < toHalf) value = 50 * Math.pow(t / toHalf, 1.6);
+    else if (t >= toHalf) {
+      if (!threshold.classList.contains("is-crossed")) {
+        threshold.classList.add("is-crossed");
+        winConfetti.burst(candidate.color);
+      }
+      const k = Math.min(1, (t - toHalf) / toShare);
+      value = 50 + (f.share - 50) * (1 - Math.pow(1 - k, 3));
+    }
+    fill.style.width = `${Math.min(100, value)}%`;
+    label.textContent = `${value.toLocaleString("pl-PL", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+    if (t < toHalf + toShare) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+  winTimers.push(window.setTimeout(() => winConfetti.cannons(candidate.color), 3950));
+  winTimers.push(
+    window.setTimeout(() => {
+      win.classList.remove("is-counting");
+      countWinnerStats(winnerFigures(candidate), 900);
+    }, 4450)
+  );
+}
+
+function closeWinner() {
+  if (!winOpen) return;
+  winOpen = false;
+  winTimers.forEach((timer) => window.clearTimeout(timer));
+  winTimers = [];
+  const win = document.querySelector("#win");
+  win.classList.add("is-leaving");
+  winConfetti.stop();
+  window.setTimeout(() => {
+    win.hidden = true;
+    win.classList.remove("is-playing", "is-leaving", "is-counting");
+  }, 360);
+  if (winReturnFocus && winReturnFocus.focus) winReturnFocus.focus({ preventScroll: true });
+}
+
+// Confetti on a canvas: a burst at the 50% line, then two cannons from the
+// bottom corners.
+const winConfetti = (() => {
+  let bits = [];
+  let running = false;
+  let ctx = null;
+  const canvas = () => document.querySelector("#win-confetti");
+  const colors = (color) => [color, color, "#f4c95d", "#ffffff", "#ffe7a3"];
+  const quiet = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function size() {
+    const el = canvas();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    el.width = window.innerWidth * dpr;
+    el.height = window.innerHeight * dpr;
+    ctx = el.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function spawn(x, y, angle, spread, speed, count, palette) {
+    if (!ctx) size();
+    for (let index = 0; index < count; index += 1) {
+      const a = angle + (Math.random() - 0.5) * spread;
+      const s = speed * (0.55 + Math.random() * 0.6);
+      bits.push({
+        x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+        w: 6 + Math.random() * 7, h: 9 + Math.random() * 9,
+        r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.35,
+        flip: Math.random() * 6.28, vf: 0.08 + Math.random() * 0.14,
+        color: palette[index % palette.length], life: 0, max: 220 + Math.random() * 120,
+        round: Math.random() < 0.18,
+      });
+    }
+    if (!running) {
+      running = true;
+      requestAnimationFrame(frame);
+    }
+  }
+  function frame() {
+    if (!running) return;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    ctx.clearRect(0, 0, width, height);
+    bits = bits.filter((b) => b.life < b.max && b.y < height + 40);
+    for (const b of bits) {
+      b.life += 1;
+      b.vy += 0.16;
+      b.vx *= 0.985;
+      b.vy *= 0.985;
+      b.x += b.vx + Math.sin(b.life * 0.05) * 0.6;
+      b.y += b.vy;
+      b.r += b.vr;
+      b.flip += b.vf;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, (b.max - b.life) / 40);
+      ctx.translate(b.x, b.y);
+      ctx.rotate(b.r);
+      ctx.scale(1, Math.cos(b.flip));
+      ctx.fillStyle = b.color;
+      if (b.round) {
+        ctx.beginPath();
+        ctx.arc(0, 0, b.w / 2, 0, 6.28);
+        ctx.fill();
+      } else ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
+      ctx.restore();
+    }
+    if (bits.length) requestAnimationFrame(frame);
+    else running = false;
+  }
+  return {
+    burst(color) {
+      if (quiet()) return;
+      size();
+      spawn(window.innerWidth / 2, window.innerHeight * 0.52, -Math.PI / 2, Math.PI * 2, 9, 70, colors(color));
+    },
+    cannons(color) {
+      if (quiet()) return;
+      const phone = window.innerWidth < window.innerHeight;
+      const speed = phone ? 17 : 24;
+      const count = phone ? 110 : 170;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      spawn(0, h, -Math.PI / 3.1, 0.55, speed, count, colors(color));
+      spawn(w, h, -Math.PI + Math.PI / 3.1, 0.55, speed, count, colors(color));
+      winTimers.push(
+        window.setTimeout(() => {
+          spawn(0, h, -Math.PI / 2.6, 0.6, speed * 0.9, count / 2, colors(color));
+          spawn(w, h, -Math.PI + Math.PI / 2.6, 0.6, speed * 0.9, count / 2, colors(color));
+        }, 380)
+      );
+    },
+    stop() {
+      bits = [];
+      running = false;
+      if (ctx) ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    },
+  };
+})();
+
+window.addEventListener("resize", () => {
+  if (winOpen) fitWinnerName();
+});
 
 // Results arrive by republishing data/results.json. Check every 30 seconds
 // (and when the tab comes back) and redraw only when the count changed.

@@ -40,7 +40,7 @@
       href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"
       crossorigin=""
     />
-    <link rel="stylesheet" href="css/styles.css?v=20261011a" />
+    <link rel="stylesheet" href="css/styles.css?v=20261011b" />
   </head>
   <body>
     <div id="ticker" class="ticker" hidden>
@@ -157,6 +157,38 @@
       </div>
     </div>
     <div id="confetti" class="confetti" aria-hidden="true"></div>
+    <section id="win" class="win" role="dialog" aria-modal="true" aria-labelledby="win-name" aria-describedby="win-line" hidden>
+      <div class="win-skyline" aria-hidden="true">
+        <img class="win-palac" data-src="img/zwyciezca/palac.webp" alt="" />
+        <img class="win-wawel" data-src="img/zwyciezca/wawel.webp" alt="" />
+        <img class="win-mariacki" data-src="img/zwyciezca/mariacki.webp" alt="" />
+      </div>
+      <div class="win-portrait"><img id="win-photo" alt="" /></div>
+      <p class="win-brand"><i></i>Wybory prezydenta Krakowa · II tura</p>
+      <div class="win-copy">
+        <span class="win-kicker"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="win-kicker">Rozstrzygnięte</span></span>
+        <h2 class="win-name" id="win-name"><span class="win-first"><b id="win-first"></b></span><span class="win-last"><b id="win-last"></b></span></h2>
+        <div class="win-ribbon" id="win-ribbon"></div>
+        <p class="win-line" id="win-line"></p>
+        <div class="win-stats" id="win-stats"></div>
+      </div>
+      <div class="win-threshold" id="win-threshold" aria-hidden="true">
+        <p class="win-t-name" id="win-t-name"></p>
+        <p class="win-t-pct" id="win-t-pct">0,0%</p>
+        <div class="win-t-track">
+          <span class="win-t-fill" id="win-t-fill"></span>
+          <i class="win-t-line"><span class="win-t-ring"></span><span class="win-t-ring"></span></i>
+        </div>
+        <p class="win-t-note" id="win-t-note"></p>
+      </div>
+      <div class="win-sweep" aria-hidden="true"><i></i><i></i></div>
+      <canvas class="win-confetti" id="win-confetti" aria-hidden="true"></canvas>
+      <div class="win-strip" aria-hidden="true">
+        <span class="win-strip-tag">Na żywo</span>
+        <div class="win-strip-run"><p id="win-strip-text"></p></div>
+      </div>
+      <button type="button" class="win-close" id="win-close">Zobacz mapę wyników →</button>
+    </section>
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -164,6 +196,6 @@
     ></script>
     <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
     <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.0/leaflet-maplibre-gl.js"></script>
-    <script src="js/map.js?v=20261011a"></script>
+    <script src="js/map.js?v=20261011b"></script>
   </body>
 </html>
