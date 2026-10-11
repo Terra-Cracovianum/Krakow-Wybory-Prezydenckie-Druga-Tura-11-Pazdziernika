@@ -1,18 +1,18 @@
 {
   "status": "partial",
   "round": 2,
-  "updatedAt": "2026-10-11T21:32:28.000Z",
+  "updatedAt": "2026-10-11T21:34:12.000Z",
   "precinctsTotal": 454,
-  "precinctsReporting": 438,
-  "eligible": 564221,
-  "ballots": 249311,
-  "validCards": 249363,
-  "validVotes": 246889,
-  "invalidVotes": 2474,
-  "turnout": 44.2,
+  "precinctsReporting": 442,
+  "eligible": 571679,
+  "ballots": 252594,
+  "validCards": 252646,
+  "validVotes": 250137,
+  "invalidVotes": 2509,
+  "turnout": 44.19,
   "candidates": {
-    "gibala": 153725,
-    "piatkowska": 93164
+    "gibala": 155644,
+    "piatkowska": 94493
   },
   "precincts": {
     "1": {
@@ -571,7 +571,16 @@
       }
     },
     "48": {
-      "reported": false
+      "reported": true,
+      "eligible": 1762,
+      "ballots": 854,
+      "validCards": 854,
+      "validVotes": 845,
+      "invalidVotes": 9,
+      "votes": {
+        "gibala": 440,
+        "piatkowska": 405
+      }
     },
     "49": {
       "reported": true,
@@ -985,7 +994,16 @@
       }
     },
     "84": {
-      "reported": false
+      "reported": true,
+      "eligible": 1960,
+      "ballots": 815,
+      "validCards": 815,
+      "validVotes": 810,
+      "invalidVotes": 5,
+      "votes": {
+        "gibala": 511,
+        "piatkowska": 299
+      }
     },
     "85": {
       "reported": true,
@@ -1549,7 +1567,16 @@
       }
     },
     "134": {
-      "reported": false
+      "reported": true,
+      "eligible": 1460,
+      "ballots": 712,
+      "validCards": 712,
+      "validVotes": 701,
+      "invalidVotes": 11,
+      "votes": {
+        "gibala": 364,
+        "piatkowska": 337
+      }
     },
     "135": {
       "reported": true,
@@ -3442,7 +3469,16 @@
       }
     },
     "297": {
-      "reported": false
+      "reported": true,
+      "eligible": 2276,
+      "ballots": 902,
+      "validCards": 902,
+      "validVotes": 892,
+      "invalidVotes": 10,
+      "votes": {
+        "gibala": 604,
+        "piatkowska": 288
+      }
     },
     "298": {
       "reported": true,
