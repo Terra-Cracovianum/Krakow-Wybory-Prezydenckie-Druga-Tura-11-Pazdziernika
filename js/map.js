@@ -34,6 +34,72 @@ init().catch((error) => {
 // scripts/visits.mjs. The times are defined further down (POLLS_CLOSE_AT).
 const VISIT_BASE = "https://abacus.jasoncameron.dev/hit/terra-cracovianum.github.io/krakow-2-tura";
 
+// The buildup under the whole page. The file is mastered hot (−9 LUFS),
+// so 0.2 lands near −23 LUFS: present, still in the background. The choice
+// is remembered; a fresh visit plays.
+const BED_VOLUME = 0.2;
+const BED_KEY = "krakow-2-tura-muzyka";
+
+function startBed() {
+  const audio = document.querySelector("#bed");
+  const button = document.querySelector("#sound-toggle");
+  if (!audio || !button) return;
+  audio.loop = true;
+  audio.volume = BED_VOLUME;
+
+  let muted = false;
+  try {
+    muted = localStorage.getItem(BED_KEY) === "off";
+  } catch {
+    muted = false;
+  }
+  audio.muted = muted;
+
+  const paint = () => {
+    button.classList.toggle("is-muted", muted);
+    button.setAttribute("aria-pressed", muted ? "true" : "false");
+    button.setAttribute("aria-label", muted ? "Włącz muzykę w tle" : "Wycisz muzykę w tle");
+  };
+
+  const play = () => {
+    if (muted || !audio.paused) return;
+    const attempt = audio.play();
+    if (attempt && attempt.catch) attempt.catch(() => arm());
+  };
+
+  let waiting = false;
+  const arm = () => {
+    if (waiting) return;
+    waiting = true;
+    const go = (event) => {
+      if (event.target.closest && event.target.closest("#sound-toggle")) return;
+      waiting = false;
+      window.removeEventListener("pointerdown", go, true);
+      window.removeEventListener("keydown", go, true);
+      play();
+    };
+    window.addEventListener("pointerdown", go, true);
+    window.addEventListener("keydown", go, true);
+  };
+
+  button.addEventListener("click", () => {
+    muted = !muted;
+    audio.muted = muted;
+    try {
+      localStorage.setItem(BED_KEY, muted ? "off" : "on");
+    } catch {
+      /* the button still works for this visit */
+    }
+    paint();
+    if (!muted) play();
+  });
+
+  paint();
+  if (!muted) play();
+}
+
+startBed();
+
 function countVisit() {
   const host = location.hostname;
   if (host === "localhost" || host === "127.0.0.1") return;

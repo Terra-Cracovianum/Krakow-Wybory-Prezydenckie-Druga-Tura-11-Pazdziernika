@@ -2501,3 +2501,48 @@ html.is-compact .legend-notes { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .win-strip-run p { animation: none; padding-left: 16px; }
 }
+
+/* Background music. Sits clear of the PKW card on a computer, and in the
+   top-right corner on a phone, where that card is hidden. Stays above the
+   winner announcement so it can be silenced there too. */
+.sound-toggle {
+  position: fixed;
+  z-index: 1100;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: var(--shadow-float);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.sound-toggle svg { width: 18px; height: 18px; display: block; }
+
+.sound-toggle .sound-off { display: none; }
+
+.sound-toggle.is-muted .sound-on { display: none; }
+
+.sound-toggle.is-muted .sound-off { display: block; }
+
+@media (min-width: 861px) and (min-height: 561px) {
+  .sound-toggle { top: 148px; right: 32px; }
+  html.has-ticker .sound-toggle { top: calc(36px + 148px); }
+}
+
+@media (max-width: 860px), (max-height: 560px) {
+  html.has-ticker .sound-toggle { top: calc(34px + env(safe-area-inset-top) + 8px); }
+}
+
+body:has(#win:not([hidden])) .sound-toggle {
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+}

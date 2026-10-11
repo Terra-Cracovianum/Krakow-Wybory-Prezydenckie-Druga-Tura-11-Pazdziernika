@@ -197,6 +197,10 @@ Every figure comes from `data/results.json`. Before the full count the overlay s
 
 The mockups made for this feature used invented numbers. They are not results and must never be published or committed. Nobody knows the final result until PKW counts it.
 
+## Background music
+
+`built up song.mp3` plays in a loop under the whole page, including the winner announcement. It is not tied to the result. The file is mastered at about −9 LUFS, and `#bed` is played at volume `0.2` so it sits in the background. `#sound-toggle` (top right; on a computer, just under the PKW card) silences it. The choice is remembered in `localStorage` key `krakow-2-tura-muzyka` (`off` or `on`). A browser that blocks sound until a gesture starts the track on the first tap or key anywhere else on the page.
+
 ## Live updates
 
 The page fetches `data/results.json` every 30 seconds, and again when the tab comes back into view (`startPolling`, `refreshResults`). It redraws only when `updatedAt` or `precinctsReporting` changed. The race glides from the numbers on screen to the new ones, and an open station or district sheet is refreshed in place.
