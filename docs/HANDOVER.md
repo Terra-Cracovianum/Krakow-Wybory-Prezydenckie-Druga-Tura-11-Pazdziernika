@@ -199,7 +199,7 @@ The mockups made for this feature used invented numbers. They are not results an
 
 ## Background music
 
-`built up song.mp3` plays in a loop under the whole page until a winner is certain. It is mastered at about −9 LUFS, and `#bed` is played at volume `0.2` so it sits in the background. When `announceWinner` opens because someone has more than half of the valid votes and cannot be caught, or the full count names them, `result's are in.mp3` (`#win-music`, volume `0.4`) starts from the beginning and the buildup stops. It plays again from the start when the full count arrives. It is whoever `decidedWinner` or `renderRunoff` names, not a fixed candidate. `#sound-toggle` silences both. The choice is remembered in `localStorage` key `krakow-2-tura-muzyka` (`off` or `on`). A browser that blocks sound until a gesture starts the track on the first tap or key anywhere else on the page.
+`result's are in.mp3` plays in a loop under the whole page from the moment it opens, including while someone is just looking at the map. The buildup does not start. The file fades out at the end and the loop begins again. It is mastered at about −10 LUFS, and `#bed` is played at volume `0.35`. `#sound-toggle` silences it. The choice is remembered in `localStorage` key `krakow-2-tura-muzyka` (`off` or `on`). A browser that blocks sound until a gesture starts the track on the first tap or key anywhere else on the page. The winner announcement still names whoever `decidedWinner` or `renderRunoff` names.
 
 ## Live updates
 
